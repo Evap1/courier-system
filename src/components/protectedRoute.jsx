@@ -3,38 +3,17 @@ import { Navigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
+import { useAuth } from "../context/AuthContext"; // for glbal user , userRole
 
 export const ProtectedRoute = ({ children, role }) => {
-    const [userRole, setUserRole] = useState(null);
-    const user = auth.currentUser;
+    const { user, userRole, loading } = useAuth();
 
-    useEffect(() => {
-        if (user && !userRole) {
-          const fetchUserRole = async () => {
-            try {
-              const userDoc = await getDoc(doc(db, "users", user.uid));
-              if (userDoc.exists()) {
-                if (userDoc.data().role){
-                    console.log("role is ", userDoc.data().role);
+    if (loading) return <h2>Loading...</h2>;
+    if (!user) return <Navigate to="/" />;
+    if (role && role !== userRole) return <Navigate to="/" />;
+  
+    return children;
 
-                }
-                else{
-                    console.log("role is not null");
-                }
-                setUserRole(userDoc.data().role);
-              }
-            } catch (error) {
-              console.error("Error fetching user role", error);
-            }
-          };
-          fetchUserRole();
-        }
-      }, [user, userRole]);
-    
-      if (!user) return <Navigate to="/" />;
-      if (!userRole) return <Navigate to="/role" />;
-    
-      return userRole === role ? children : <Navigate to="/" />;
 };
     
 export default ProtectedRoute;
