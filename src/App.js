@@ -8,35 +8,19 @@ import { Role } from "./pages/role";
 import { Admin } from "./pages/admin";
 import { Courier } from "./pages/courier";
 import { Business } from "./pages/business";
+import { useAuth } from "./context/AuthContext"; // for global user / userRole
 
 import "./App.css";
 import { useEffect, useState } from "react";
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [isFetching, setIsFetching] = useState(true);
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        setIsFetching(false);
-        return;
-      }
-
-      setUser(null);
-      setIsFetching(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  if (isFetching) {
-    return <h2>Loading...</h2>;
-  }
+  const { loading } = useAuth();
+  if (loading) return <h2>Loading...</h2>;
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route index path="/" element={<Login user={user}></Login>}></Route>
+        <Route index path="/" element={<Login />}></Route>
         <Route
           path="/admin"
           element={
@@ -67,7 +51,7 @@ function App() {
         <Route
           path="/role"
           element={
-            <ProtectedRoute role="">
+            <ProtectedRoute> {/* passing noting as the role is yet set, will be seen as null inside ProtectedRoute */}
               <Role />
             </ProtectedRoute>
           }

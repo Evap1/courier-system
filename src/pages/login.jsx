@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { createUserDocument } from "../services/firestoreService";
+import { useAuth } from "../context/AuthContext";
 
 import {
   createUserWithEmailAndPassword,
@@ -12,11 +13,13 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth , googleProvider, db} from "../firebase";
 
 
-export const Login =  ({ user }) => {
+export const Login =  () => {
+    const { user } = useAuth();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isSignUpActive, setIsSignUpActive] = useState(true);
-
+    const navigate = useNavigate();
 
     const handleMethodChange = () => {
       setIsSignUpActive(!isSignUpActive);
@@ -52,11 +55,11 @@ export const Login =  ({ user }) => {
       
             if (role) {
               // Existing user - navigate to their role-based dashboard
-              return <Navigate to={`/${role}`} />;
+              navigate(`/${role}`);
             } else {
               // New user - create Firestore document and navigate to role selection
               await createUserDocument(user.uid, user.email, null);
-              return <Navigate to="/role" />;
+              navigate("/role");
             }
           } catch (error) {
             console.error("Error during Google sign-in:", error);
@@ -73,7 +76,7 @@ export const Login =  ({ user }) => {
           await createUserDocument(user.uid, user.email, null);
     
           // Navigate to role selection
-          return <Navigate to="/role" />;
+          navigate("/role")
         } catch (error) {
           console.error("Error during email sign-up:", error);
         }
@@ -90,7 +93,7 @@ export const Login =  ({ user }) => {
     
           if (role) {
             // Existing user - navigate to their role-based dashboard
-            return <Navigate to={`/${role}`} />;
+            navigate(`/${role}`);
           }
 
         } catch (error) {
@@ -104,7 +107,7 @@ export const Login =  ({ user }) => {
     const handleEmailChange = (event) => setEmail(event.target.value);
     const handlePasswordChange = (event) => setPassword(event.target.value);
   
-    if (user) return <Navigate to="/" />;
+    if (user) navigate("/");
     
     return (
       <section>
