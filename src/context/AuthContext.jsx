@@ -29,8 +29,19 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  // a function to globally trigget setting the user role (in role component)
+  const refreshUserRole = async () => {
+    if (user) {
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setUserRole(docSnap.data().role);
+      }
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userRole, loading }}>
+    <AuthContext.Provider value={{ user, userRole, loading, refreshUserRole }}>
       {children}
     </AuthContext.Provider>
   );
