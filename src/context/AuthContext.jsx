@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import { signOut as firebaseSignOut } from "firebase/auth";
 
 const AuthContext = createContext();
 
@@ -29,6 +30,17 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+      setUser(null);
+      setUserRole(null);
+      console.log("User signed out");
+    } catch (error) {
+      console.error("Sign out error", error);
+    }
+  };
+
   // a function to globally trigget setting the user role (in role component)
   const refreshUserRole = async () => {
     if (user) {
@@ -41,7 +53,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userRole, loading, refreshUserRole }}>
+    <AuthContext.Provider value={{ user, userRole, loading, refreshUserRole, signOut}}>
       {children}
     </AuthContext.Provider>
   );

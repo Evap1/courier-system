@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUserDocument } from "../services/firestoreService";
 import { useAuth } from "../context/AuthContext";
@@ -14,7 +14,7 @@ import { auth , googleProvider, db} from "../firebase";
 
 
 export const Login =  () => {
-    const { user } = useAuth();
+    const { user , userRole } = useAuth();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -106,8 +106,14 @@ export const Login =  () => {
    */
     const handleEmailChange = (event) => setEmail(event.target.value);
     const handlePasswordChange = (event) => setPassword(event.target.value);
-  
-    if (user) navigate("/");
+    
+    // to handle signout / signin
+    useEffect(() => {
+      if (user) {
+        navigate(`/${userRole || "role"}`);
+      }
+    }, [user, userRole, navigate]);
+    
     
     return (
       <section>
