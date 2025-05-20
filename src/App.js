@@ -7,6 +7,7 @@ import { Admin } from "./pages/admin";
 import { Courier } from "./pages/courier";
 import { Business } from "./pages/business";
 import { useAuth } from "./context/AuthContext"; // for global user / userRole
+import Header from "./components/header";
 
 function App() {
   const { loading } = useAuth();
@@ -14,6 +15,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Header /> {/* Global Sign Out button */}
       <Routes>
         <Route index path="/" element={<Login />}></Route>
         <Route
