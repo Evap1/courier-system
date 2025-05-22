@@ -15,6 +15,7 @@ import { auth , googleProvider, db} from "../firebase";
 
 export const Login =  () => {
     const { user , userRole } = useAuth();
+    const [error, setError] = useState(null);
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -23,6 +24,7 @@ export const Login =  () => {
 
     const handleMethodChange = () => {
       setIsSignUpActive(!isSignUpActive);
+      setError(null);
     };
   
     
@@ -38,8 +40,9 @@ export const Login =  () => {
                 return userDoc.data().role;
             }
         }
-        catch(e){
-            console.error("Error:", e.message);
+        catch(error){
+            //console.error("Error:", e.message);
+            setError(error.message);
         }
         return (null)
     }
@@ -62,7 +65,8 @@ export const Login =  () => {
               navigate("/role");
             }
           } catch (error) {
-            console.error("Error during Google sign-in:", error);
+            //error("Error during Google sign-in:", error);
+            setError(error.message);
           }
     };
 
@@ -78,7 +82,8 @@ export const Login =  () => {
           // Navigate to role selection
           navigate("/role")
         } catch (error) {
-          console.error("Error during email sign-up:", error);
+          //console.error("Error during email sign-up:", error);
+          setError(error.message);
         }
       };
   
@@ -97,7 +102,8 @@ export const Login =  () => {
           }
 
         } catch (error) {
-          console.error("Error during sign-in:", error);
+          //console.error("Error during sign-in:", error);
+          setError(error.message);
         }
       };
 
@@ -137,6 +143,7 @@ export const Login =  () => {
                 />
               </li>
             </ul>
+            {error && <p style={{ color: "red" }}>{error}</p>}
 
             <button
             type="button"
@@ -165,11 +172,24 @@ export const Login =  () => {
             )}
           </fieldset>
 
-          {isSignUpActive && <a onClick={handleMethodChange}>Login</a>}
-          {!isSignUpActive && (
-            <a onClick={handleMethodChange}>Create an account</a>
-          )}
+          <button
+            type="button"
+            onClick={handleMethodChange}
+            // make it look like hyperlink
+            style={{
+              marginTop: "1rem",
+              background: "none",
+              border: "none",
+              color: "blue",
+              textDecoration: "underline",
+              cursor: "pointer",
+            }}
+          >
+            {isSignUpActive ? "Login" : "Create an account"}
+          </button>
+
         </form>
+
       </section>
     );
   };

@@ -2,13 +2,14 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
 export const Role = () => {
     const { user , refreshUserRole } = useAuth();
     const navigate = useNavigate();
-
+    const [name, setName] = useState("");
+    const [businessAddress, setBusinessAddress] = useState(""); 
     const [selectedRole, setSelectedRole] = useState("");
     const [error, setError] = useState(null);
 
@@ -19,15 +20,26 @@ export const Role = () => {
     // we want to try to update the data in firebase
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!selectedRole) {
-            setError("Please select a role");
+        if (!selectedRole || !name || (selectedRole === "business" && !businessAddress)) {
+            setError("Please fill in all required fields.");
             return;
-        }
+          }
 
         try {
-            // Update the user document with the selected role
-            const userDoc = doc(db, "users", user.uid); // points to users/{uid}
-            await updateDoc(userDoc, { role: selectedRole });
+            // Update the user document with the selected fields
+            const userDoc = doc(db, "users", user.uid);
+            const userData = await getDoc(userDoc);
+        
+            const existingData = userData.exists() ? userData.data() : {};
+            const preservedEmail = existingData.email || user.email; // fallback to auth value
+        
+            await setDoc(userDoc, {
+              email: preservedEmail,
+              role: selectedRole,
+              name,
+              ...(selectedRole === "business" ? { businessAddress } : {})
+            }, { merge: true });
+
             await refreshUserRole(); // Refetch from Firestore
 
             // Navigate to the relevant dashboard
@@ -40,9 +52,10 @@ export const Role = () => {
 
     return (
         <section>
-          <h2>Select Your Role</h2>
           <form onSubmit={handleSubmit}>
             <label>
+            Select Your Role:
+            <br/>
               <input
                 type="radio"
                 value="courier"
@@ -60,6 +73,30 @@ export const Role = () => {
                 onChange={handleChange}
               />
               Business
+            </label>
+            <br />
+            {selectedRole === "business" && (
+                <label>
+                    Business Address:
+                    <input
+                    value={businessAddress}
+                    onChange={(e) => setBusinessAddress(e.target.value)}
+                    required
+                    />
+                </label>
+            )}
+            <br />
+            <label>
+            {selectedRole === "business"
+                ? "Business name:"
+                : selectedRole === "courier"
+                ? "Enter courier name:"
+                : "Name:"}
+            <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+            />
             </label>
             <br />
             <button type="submit">Continue</button>
