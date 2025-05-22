@@ -1,3 +1,4 @@
+
 // src/pages/admin.jsx
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
@@ -86,3 +87,4 @@ export const Admin = () => {
 };
 
 export default Admin;
+

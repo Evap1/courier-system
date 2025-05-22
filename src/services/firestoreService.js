@@ -1,5 +1,7 @@
 import { db } from "../firebase";
+
 import { doc, collection, Timestamp, setDoc, addDoc } from "firebase/firestore";
+
 
 
 /**
@@ -9,12 +11,14 @@ import { doc, collection, Timestamp, setDoc, addDoc } from "firebase/firestore";
  * @param {string} role - User role (courier, business, admin).
  */ 
 export const createUserDocument = async (uid, email, role = null, name,  extraFields = {}) => {
+
   try {
     await setDoc(doc(db, "users", uid), {
       email,
       role,
       name,
       ...extraFields
+
     });
     console.log(`User document created for UID: ${uid}`);
   } catch (error) {
@@ -41,3 +45,4 @@ export const createDeliveryDocument = async (businessId, businessName, item, src
     throw error;
   }
 };
+

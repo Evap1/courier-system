@@ -2,14 +2,18 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
+
 import { doc, setDoc, getDoc } from "firebase/firestore";
+
 import { db } from "../firebase";
 
 export const Role = () => {
     const { user , refreshUserRole } = useAuth();
     const navigate = useNavigate();
+
     const [name, setName] = useState("");
     const [businessAddress, setBusinessAddress] = useState(""); 
+
     const [selectedRole, setSelectedRole] = useState("");
     const [error, setError] = useState(null);
 
@@ -20,6 +24,7 @@ export const Role = () => {
     // we want to try to update the data in firebase
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         if (!selectedRole || !name || (selectedRole === "business" && !businessAddress)) {
             setError("Please fill in all required fields.");
             return;
@@ -40,6 +45,7 @@ export const Role = () => {
               ...(selectedRole === "business" ? { businessAddress } : {})
             }, { merge: true });
 
+
             await refreshUserRole(); // Refetch from Firestore
 
             // Navigate to the relevant dashboard
@@ -52,10 +58,12 @@ export const Role = () => {
 
     return (
         <section>
+
           <form onSubmit={handleSubmit}>
             <label>
             Select Your Role:
             <br/>
+
               <input
                 type="radio"
                 value="courier"
@@ -99,6 +107,7 @@ export const Role = () => {
             />
             </label>
             <br />
+
             <button type="submit">Continue</button>
             {error && <p style={{ color: "red" }}>{error}</p>}
           </form>
