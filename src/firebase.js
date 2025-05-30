@@ -26,3 +26,5 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
+export const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+

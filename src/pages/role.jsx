@@ -1,6 +1,7 @@
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { AddressInput } from "../components/address";
 
 
 import { doc, setDoc, getDoc } from "firebase/firestore";
@@ -12,7 +13,8 @@ export const Role = () => {
     const navigate = useNavigate();
 
     const [name, setName] = useState("");
-    const [businessAddress, setBusinessAddress] = useState(""); 
+//    const [businessAddress, setBusinessAddress] = useState(""); 
+    const [addressObj, setAddressObj] = useState(null);   // { formatted, placeId, location }
 
     const [selectedRole, setSelectedRole] = useState("");
     const [error, setError] = useState(null);
@@ -25,7 +27,7 @@ export const Role = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!selectedRole || !name || (selectedRole === "business" && !businessAddress)) {
+        if (!selectedRole || !name || (selectedRole === "business" && !addressObj)) {
             setError("Please fill in all required fields.");
             return;
           }
@@ -42,7 +44,11 @@ export const Role = () => {
               email: preservedEmail,
               role: selectedRole,
               name,
-              ...(selectedRole === "business" ? { businessAddress } : {})
+              ...(selectedRole === "business" ? { 
+                businessAddress: addressObj.formatted,
+                placeId: addressObj.placeId,
+                location: addressObj.location, //lat/lng
+               } : {})
             }, { merge: true });
 
 
@@ -84,14 +90,15 @@ export const Role = () => {
             </label>
             <br />
             {selectedRole === "business" && (
-                <label>
-                    Business Address:
-                    <input
-                    value={businessAddress}
-                    onChange={(e) => setBusinessAddress(e.target.value)}
-                    required
-                    />
-                </label>
+              <AddressInput onSelect={setAddressObj} />
+                // <label>
+                //     Business Address:
+                //     <input
+                //     value={businessAddress}
+                //     onChange={(e) => setBusinessAddress(e.target.value)}
+                //     required
+                //     />
+                // </label>
             )}
             <br />
             <label>
