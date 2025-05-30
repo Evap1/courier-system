@@ -19,7 +19,7 @@ export const Admin = () => {
           Item: deliveriesData.item,
           Status: deliveriesData.status,
           Pickup: deliveriesData.src,
-          Destination: deliveriesData.dst,
+          Destination: deliveriesData.destinationAddress,
           "Created At": deliveriesData.createdAt?.toDate().toString(),
         };
       });

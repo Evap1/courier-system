@@ -37,7 +37,7 @@ export function AddressInput({ onSelect }) {
       >
         <input
           type="text"
-          placeholder="Business address"
+          placeholder="Fill in address"
           className="input input-bordered w-full"
           required
         />

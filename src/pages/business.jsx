@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot, getDoc, doc } from "firebase/firestore";
 import { createDeliveryDocument } from "../services/firestoreService";
+import { AddressInput } from "../components/address";
 
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
@@ -54,6 +55,7 @@ export const Business = () => {
             businessData.name,
             item,
             businessData.businessAddress,
+            businessData.location,
             destination,
             null,
             "posted"
@@ -86,7 +88,7 @@ export const Business = () => {
           <br />
           <label>
             Destination:
-            <input value={destination} onChange={(e) => setDestination(e.target.value)} required />
+            <AddressInput onSelect={setDestination} />
           </label>
           <br />
           <button type="submit">Submit</button>
@@ -110,7 +112,7 @@ export const Business = () => {
                 <tr key={delivery.id}>
                   <td>{delivery.item}</td>
                   <td>{delivery.status}</td>
-                  <td>{delivery.dst}</td>
+                  <td>{delivery.destinationAddress}</td>
                   <td>{delivery.createdAt?.toDate().toLocaleString()}</td>
                   <td>
                     {delivery.assignedTo ? (

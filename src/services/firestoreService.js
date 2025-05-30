@@ -26,14 +26,16 @@ export const createUserDocument = async (uid, email, role = null, name,  extraFi
   }
 };
 
-export const createDeliveryDocument = async (businessId, businessName, item, src, dst, assignedTo, status) => {
+export const createDeliveryDocument = async (businessId, businessName, item, src, srcLoc, dst, assignedTo, status) => {
   try {
     const docRef = await addDoc(collection(db, "deliveries"), {
       businessId,
       businessName,
       item,
-      src,
-      dst,
+      businessAddress: src,
+      businessLocation: srcLoc,
+      destinationAddress: dst.formatted,
+      destinationLocation: dst.location,
       createdAt: Timestamp.now(),
       assignedTo,
       status

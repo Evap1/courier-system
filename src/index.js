@@ -10,12 +10,12 @@ import { googleMapsApiKey } from "./firebase"
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
+
+    <AuthProvider>      {/* wrap for authentication */}
     <LoadScript
     googleMapsApiKey= {googleMapsApiKey}
     libraries={["places"]}          // any future page can now use Autocomplete
   ></LoadScript>
-    <AuthProvider>      {/* wrap for authentication */}
-      
       <App />
     </AuthProvider>
   </React.StrictMode>
