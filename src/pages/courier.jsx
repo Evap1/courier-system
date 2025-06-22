@@ -1,6 +1,6 @@
 // for later
-import { collection, query, where, onSnapshot, updateDoc, doc } from "firebase/firestore";
-import { db, googleMapsApiKey } from "../firebase";
+import { collection, query, where, onSnapshot} from "firebase/firestore";
+import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 
 // pages/courier.jsx - for now

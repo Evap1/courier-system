@@ -1,0 +1,212 @@
+
+openapi: "3.0.3"
+
+info:
+  title: Courier API
+  version: "0.1.1"
+  description: >
+    REST interface for the Courier-Management project — now aligned with
+    the Firestore document structure that includes pickup and destination
+    addresses.
+
+servers:
+  - url: http://localhost:3000
+    description: Local
+  - url: https://courier-api.example.com
+    description: Production
+
+paths:
+
+  /deliveries:
+    post:
+      summary: Create a new delivery (business role)
+      operationId: createDelivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeliveryCreate' }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Delivery' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+
+    get:
+      summary: List deliveries (optional geo-filter)
+      operationId: listDeliveries
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [posted, accepted, picked_up, delivered] }
+        - name: lat
+          in: query
+          schema: { type: number, format: double }
+        - name: lng
+          in: query
+          schema: { type: number, format: double }
+        - name: r
+          in: query
+          description: Radius in kilometres from (lat,lng)
+          schema: { type: number, format: double }
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageToken'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Delivery' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+
+  /deliveries/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+
+    patch:
+      summary: Update delivery status / assignment (courier)
+      operationId: updateDelivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeliveryPatch' }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Delivery' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  /deliveries/{id}/accept:
+    post:
+      summary: Courier attempts to claim a delivery
+      operationId: acceptDelivery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Delivery' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "404": { $ref: '#/components/responses/NotFound' }
+        "409":
+          description: Delivery already assigned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+
+  ##################################################################
+  # Schemas
+  ##################################################################
+  schemas:
+
+    GeoPoint:
+      type: object
+      properties:
+        lat: { type: number, format: double }
+        lng: { type: number, format: double }
+      required: [lat, lng]
+
+    Delivery:
+      type: object
+      properties:
+        id:               { type: string, readOnly: true }
+        createdBy:        { type: string, readOnly: true }
+        businessId:       { type: string, readOnly: true }
+        businessName:     { type: string }
+        businessAddress:  { type: string }
+        businessLocation: { $ref: '#/components/schemas/GeoPoint' }
+        destinationAddress:  { type: string }
+        destinationLocation: { $ref: '#/components/schemas/GeoPoint' }
+        item:             { type: string }
+        status:
+          type: string
+          enum: [posted, accepted, picked_up, delivered]
+        assignedTo:       { type: string, nullable: true }
+        createdAt:        { type: string, format: date-time, readOnly: true }
+      required:
+        [id, createdBy, businessId, businessName, businessAddress,
+         businessLocation, destinationAddress, destinationLocation,
+         item, status, createdAt]
+
+    DeliveryCreate:
+      type: object
+      properties:
+        businessName:        { type: string }
+        businessAddress:     { type: string }
+        businessLocation:    { $ref: '#/components/schemas/GeoPoint' }
+        destinationAddress:  { type: string }
+        destinationLocation: { $ref: '#/components/schemas/GeoPoint' }
+        item:                { type: string }
+      required:
+        [businessName, businessAddress, businessLocation,
+         destinationAddress, destinationLocation, item]
+
+    DeliveryPatch:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [accepted, picked_up, delivered]
+        assignedTo: { type: string, nullable: true }
+      additionalProperties: false
+
+    Error:
+      type: object
+      properties:
+        message: { type: string }
+
+  ##################################################################
+  # Reusable params & responses
+  ##################################################################
+  parameters:
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100 }
+    PageToken:
+      name: pageToken
+      in: query
+      schema: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Invalid or missing auth token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  ##################################################################
+  # Auth
+  ##################################################################
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
