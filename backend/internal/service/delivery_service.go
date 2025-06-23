@@ -9,6 +9,7 @@ import (
 	"github.com/Evap1/courier-system/backend/internal/db"
 	"github.com/Evap1/courier-system/backend/api"
 	"google.golang.org/api/iterator"
+	"fmt"
 )
 
 // api.Delivery defined by the yaml in 	backend/internal/transport/http/openapi.gen.go
@@ -94,12 +95,15 @@ func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter)
 		var d api.Delivery
 		// convert firestore fields to type api.Delivery
 		if err := doc.DataTo(&d); err != nil { continue }
+//		fmt.Println(" checking delivery:", d.Item)
 
 		// geo-filter on the app server (firestore can’t do distance natively)
 		if filter.CenterLat != nil && filter.RadiusKm != nil {
+//			fmt.Println("Entered condition for geo-filtering")
 			dist := geoDistanceKm(
 				*filter.CenterLat, *filter.CenterLng,
 				d.BusinessLocation.Lat, d.BusinessLocation.Lng)
+			fmt.Println(dist)
 			if dist > *filter.RadiusKm { continue }
 		}
 		// append the correct delivery by the values
@@ -107,9 +111,12 @@ func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter)
 	}
 
 	// compute the next-page cursor
-	var nextPageToken string
-	if len(result) == filter.PageSize {
-		nextPageToken = *result[len(result)-1].Id // simplest cursor
+	nextPageToken := ""
+	if len(result) > 0  {
+		last := result[len(result)-1]
+		if last.Id != nil {
+			nextPageToken = *last.Id
+		}
 	}
 	return result, nextPageToken, nil
 }

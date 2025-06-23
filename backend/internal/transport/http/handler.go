@@ -49,7 +49,7 @@ func (h *DeliveryHandler) CreateDelivery(c *gin.Context) {
 }
 
 // === GET /deliveries ===
-func (h *DeliveryHandler) ListDeliveries(c *gin.Context,params ListDeliveriesParams) {
+func (h *DeliveryHandler) ListDeliveries(c *gin.Context, params ListDeliveriesParams) {
 	flt := service.ListFilter{
 		PageToken: "",
 		PageSize:  0,
