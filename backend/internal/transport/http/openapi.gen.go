@@ -4,6 +4,8 @@
 package httptransport
 
 import (
+	"encoding/json"
+
 	"fmt"
 	"net/http"
 	"time"
@@ -14,6 +16,16 @@ import (
 
 const (
 	BearerAuthScopes = "bearerAuth.Scopes"
+)
+
+// Defines values for BusinessUserRole.
+const (
+	Business BusinessUserRole = "business"
+)
+
+// Defines values for CourierUserRole.
+const (
+	Courier CourierUserRole = "courier"
 )
 
 // Defines values for DeliveryStatus.
@@ -38,6 +50,31 @@ const (
 	PickedUp  ListDeliveriesParamsStatus = "picked_up"
 	Posted    ListDeliveriesParamsStatus = "posted"
 )
+
+// BusinessUser defines model for BusinessUser.
+type BusinessUser struct {
+	BusinessAddress string           `firestore:"businessAddress"`
+	BusinessName    string           `firestore:"businessName"`
+	Email           string           `firestore:"email"`
+	Id              string           `firestore:"id"`
+	Location        GeoPoint         `firestore:"location"`
+	PlaceId         *string          `firestore:"placeId,omitempty"`
+	Role            BusinessUserRole `firestore:"role"`
+}
+
+// BusinessUserRole defines model for BusinessUser.Role.
+type BusinessUserRole string
+
+// CourierUser defines model for CourierUser.
+type CourierUser struct {
+	CourierName string          `firestore:"courierName"`
+	Email       string          `firestore:"email"`
+	Id          string          `firestore:"id"`
+	Role        CourierUserRole `firestore:"role"`
+}
+
+// CourierUserRole defines model for CourierUser.Role.
+type CourierUserRole string
 
 // Delivery defines model for Delivery.
 type Delivery struct {
@@ -88,6 +125,11 @@ type GeoPoint struct {
 	Lng float64 `firestore:"lng"`
 }
 
+// OneOfUser defines model for OneOfUser.
+type OneOfUser struct {
+	union json.RawMessage
+}
+
 // PageSize defines model for PageSize.
 type PageSize = int
 
@@ -102,24 +144,86 @@ type Unauthorized = Error
 
 // ListDeliveriesParams defines parameters for ListDeliveries.
 type ListDeliveriesParams struct {
-	Status *ListDeliveriesParamsStatus `form:"status,omitempty" json:"status,omitempty"`
-	Lat    *float64                    `form:"lat,omitempty" json:"lat,omitempty"`
-	Lng    *float64                    `form:"lng,omitempty" json:"lng,omitempty"`
+	Status *ListDeliveriesParamsStatus `form:"status,omitempty" firestore:"status,omitempty"`
+	Lat    *float64                    `form:"lat,omitempty" firestore:"lat,omitempty"`
+	Lng    *float64                    `form:"lng,omitempty" firestore:"lng,omitempty"`
 
 	// R Radius in kilometres from (lat,lng)
-	R         *float64   `form:"r,omitempty" json:"r,omitempty"`
-	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	R         *float64   `form:"r,omitempty" firestore:"r,omitempty"`
+	PageSize  *PageSize  `form:"pageSize,omitempty" firestore:"pageSize,omitempty"`
+	PageToken *PageToken `form:"pageToken,omitempty" firestore:"pageToken,omitempty"`
 }
 
 // ListDeliveriesParamsStatus defines parameters for ListDeliveries.
 type ListDeliveriesParamsStatus string
 
-// CreateDeliveryJSONRequestBody defines body for CreateDelivery for application/json ContentType.
+// CreateDeliveryJSONRequestBody defines body for CreateDelivery for application/firestore ContentType.
 type CreateDeliveryJSONRequestBody = DeliveryCreate
 
-// UpdateDeliveryJSONRequestBody defines body for UpdateDelivery for application/json ContentType.
+// UpdateDeliveryJSONRequestBody defines body for UpdateDelivery for application/firestore ContentType.
 type UpdateDeliveryJSONRequestBody = DeliveryPatch
+
+// AsBusinessUser returns the union data inside the OneOfUser as a BusinessUser
+func (t OneOfUser) AsBusinessUser() (BusinessUser, error) {
+	var body BusinessUser
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromBusinessUser overwrites any union data inside the OneOfUser as the provided BusinessUser
+func (t *OneOfUser) FromBusinessUser(v BusinessUser) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeBusinessUser performs a merge with any union data inside the OneOfUser, using the provided BusinessUser
+func (t *OneOfUser) MergeBusinessUser(v BusinessUser) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCourierUser returns the union data inside the OneOfUser as a CourierUser
+func (t OneOfUser) AsCourierUser() (CourierUser, error) {
+	var body CourierUser
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCourierUser overwrites any union data inside the OneOfUser as the provided CourierUser
+func (t *OneOfUser) FromCourierUser(v CourierUser) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCourierUser performs a merge with any union data inside the OneOfUser, using the provided CourierUser
+func (t *OneOfUser) MergeCourierUser(v CourierUser) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t OneOfUser) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *OneOfUser) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -135,6 +239,9 @@ type ServerInterface interface {
 	// Courier attempts to claim a delivery
 	// (POST /deliveries/{id}/accept)
 	AcceptDelivery(c *gin.Context, id string)
+	// Dummy route to generate user schemas
+	// (GET /me)
+	GetMe(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -281,6 +388,21 @@ func (siw *ServerInterfaceWrapper) AcceptDelivery(c *gin.Context) {
 	siw.Handler.AcceptDelivery(c, id)
 }
 
+// GetMe operation middleware
+func (siw *ServerInterfaceWrapper) GetMe(c *gin.Context) {
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetMe(c)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -312,4 +434,5 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/deliveries", wrapper.CreateDelivery)
 	router.PATCH(options.BaseURL+"/deliveries/:id", wrapper.UpdateDelivery)
 	router.POST(options.BaseURL+"/deliveries/:id/accept", wrapper.AcceptDelivery)
+	router.GET(options.BaseURL+"/me", wrapper.GetMe)
 }

@@ -48,8 +48,9 @@ func main() {
 	defer fs.Close()
 
 	//  domain + handler 
-	svc := service.NewDeliveryService(fs)
-	handler := httptransport.NewDeliveryHandler(svc) // implements ServerInterface
+	userSvc := service.NewUserService(fs)
+	deliverySvc := service.NewDeliveryService(fs)
+	handler := httptransport.NewHandler(deliverySvc, userSvc) // implements ServerInterface
 
 	//  HTTP router using gin
 	router := gin.Default()

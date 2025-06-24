@@ -43,12 +43,12 @@ export const Role = () => {
             await setDoc(userDoc, {
               email: preservedEmail,
               role: selectedRole,
-              name,
               ...(selectedRole === "business" ? { 
+                businessName: name,
                 businessAddress: addressObj.formatted,
                 placeId: addressObj.placeId,
                 location: addressObj.location, //lat/lng
-               } : {})
+               } : {courierName: name})
             }, { merge: true });
 
 

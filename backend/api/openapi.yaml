@@ -110,6 +110,18 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
 
+  /me:
+    get:
+      summary: Dummy route to generate user schemas
+      operationId: getMe
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OneOfUser'
+
 components:
 
   ##################################################################
@@ -172,6 +184,45 @@ components:
       type: object
       properties:
         message: { type: string }
+
+    BusinessUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        businessName:
+          type: string
+        role:
+          type: string
+          enum: [business]
+        businessAddress:
+          type: string
+        location:
+          $ref: '#/components/schemas/GeoPoint'
+        placeId:
+          type: string
+      required: [id, email, businessName, role, businessAddress, location]
+
+    CourierUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        courierName:
+          type: string
+        role:
+          type: string
+          enum: [courier]
+      required: [id, email, courierName, role]
+
+    OneOfUser:
+      oneOf:
+        - $ref: '#/components/schemas/BusinessUser'
+        - $ref: '#/components/schemas/CourierUser'
 
   ##################################################################
   # Reusable params & responses

@@ -52,7 +52,7 @@ export const Business = () => {
         // fetch business info from users collection
         await createDeliveryDocument(
             user.uid,
-            businessData.name,
+            businessData.businessName,
             item,
             businessData.businessAddress,
             businessData.location,
@@ -74,7 +74,7 @@ export const Business = () => {
 
   return (
     <section>
-      <h2>Welcome {businessData.name}</h2>
+      <h2>Welcome {businessData.businessName}</h2>
       <button onClick={() => setShowForm(!showForm)}>
         {showForm ? "Back to Overview" : "New Delivery"}
       </button>

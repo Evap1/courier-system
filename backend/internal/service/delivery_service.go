@@ -9,7 +9,7 @@ import (
 	"github.com/Evap1/courier-system/backend/internal/db"
 	"github.com/Evap1/courier-system/backend/api"
 	"google.golang.org/api/iterator"
-	"fmt"
+//	"fmt"
 )
 
 // api.Delivery defined by the yaml in 	backend/internal/transport/http/openapi.gen.go
@@ -64,12 +64,22 @@ type ListFilter struct {
 	RadiusKm     *float64
 	PageSize     int
 	PageToken    string // firestore cursor; empty for first page
+	Role		 string
+	BusinessName string
+	CourierID	 string
 }
 
 func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter) ([]*api.Delivery, string, error) {
+	
+	var result []*api.Delivery
 
 	q := s.firestore.Collection("deliveries").
 		OrderBy("createdAt", firestore.Desc)
+
+	// for business, allow only view their deliveries
+	if filter.BusinessName != "" {
+		q = q.Where("businessName", "==", filter.BusinessName)
+	}
 
 	if filter.Status != nil {
 		q = q.Where("status", "==", *filter.Status)
@@ -86,7 +96,6 @@ func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter)
 	iter := q.Documents(ctx)
 	defer iter.Stop()
 
-	var result []*api.Delivery
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done { break }
@@ -95,18 +104,47 @@ func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter)
 		var d api.Delivery
 		// convert firestore fields to type api.Delivery
 		if err := doc.DataTo(&d); err != nil { continue }
-//		fmt.Println(" checking delivery:", d.Item)
+		//fmt.Println(" checking delivery:", d.Item)
 
 		// geo-filter on the app server (firestore can’t do distance natively)
 		if filter.CenterLat != nil && filter.RadiusKm != nil {
-//			fmt.Println("Entered condition for geo-filtering")
+			//fmt.Println("Entered condition for geo-filtering")
 			dist := geoDistanceKm(
 				*filter.CenterLat, *filter.CenterLng,
 				d.BusinessLocation.Lat, d.BusinessLocation.Lng)
-			fmt.Println(dist)
-			if dist > *filter.RadiusKm { continue }
+			//fmt.Println(dist)
+
+			// courier - see posted or its own active/picked_up/delivered deliveries
+			// by T/F table, choosing the rows with false assigment
+			if dist > *filter.RadiusKm{
+				if filter.Role == "courier"{
+					if d.Status != "posted" || (d.AssignedTo != nil && *d.AssignedTo != filter.CourierID){
+						continue
+					}
+				} else { continue }
+			}
 		}
-		// append the correct delivery by the values
+		// if courier but dont apply filtering, make sure only assigned to
+		if filter.Role == "courier"{
+			// courier without status - show only posted and assigned to. if i'm here dist is ok or not filtered.
+			if filter.Status == nil{
+				if d.Status == "posted" && d.AssignedTo == nil {
+					// ok
+				} else if d.Status != "posted" && d.AssignedTo != nil && *d.AssignedTo == filter.CourierID{
+					// ok
+				} else{
+					continue
+				}
+			// filter status != nil -> its posted or not posted.
+			// posted? show only in the limits. by here the limits are correct or unfiltered.
+			} else if *filter.Status == "posted"{
+				// ok
+			// not posted? show only deliveries assigned to me.
+			} else if d.AssignedTo != nil && *d.AssignedTo == filter.CourierID{
+				// ok
+			} else {continue}
+		}
+
 		result = append(result, &d)
 	}
 
@@ -227,3 +265,4 @@ func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, deliveryID s
 
 	return &d, nil
 }
+

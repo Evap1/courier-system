@@ -10,17 +10,29 @@ import (
 )
 
 // DeliveryHandler satisfies the generated ServerInterface.
-type DeliveryHandler struct {
-	svc *service.DeliveryService
+type Handler struct {
+	deliverySvc *service.DeliveryService
+	userSvc *service.UserService
 }
 
 // NewDeliveryHandler injects the service layer.
-func NewDeliveryHandler(s *service.DeliveryService) *DeliveryHandler {
-	return &DeliveryHandler{svc: s}
+func NewHandler(d *service.DeliveryService, u *service.UserService) *Handler {
+	return &Handler{deliverySvc: d, userSvc: u}
 }
 
+
+// // DeliveryHandler satisfies the generated ServerInterface.
+// type DeliveryHandler struct {
+// 	svc *service.DeliveryService
+// }
+
+// // NewDeliveryHandler injects the service layer.
+// func NewDeliveryHandler(s *service.DeliveryService) *DeliveryHandler {
+// 	return &DeliveryHandler{svc: s}
+// }
+
 // POST /deliveries 
-func (h *DeliveryHandler) CreateDelivery(c *gin.Context) {
+func (h *Handler) CreateDelivery(c *gin.Context) {
 	creatorUID := c.GetString("uid") // set by (future) auth middleware
     var req DeliveryCreate                              
 
@@ -28,19 +40,33 @@ func (h *DeliveryHandler) CreateDelivery(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errBody(err))
 		return
 	}
+	ctx := context.Background()
+
+	// allow only the auth business to post a delivery:
+	// get it's info, compare to the 
+	info, err := h.userSvc.GetBusinessInfo(ctx, creatorUID)
+	// if error it's not a business
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errBody(err))
+		return
+	}
+	// checking only the correct businees is posting a delivery
+	if req.BusinessName != info.BusinessName {
+		c.JSON(http.StatusBadRequest, errBody(errors.New("unauthorized: business name does not match authenticated user")))
+		return
+	}
 
 	apiReq := api.DeliveryCreate{
-        BusinessName:        req.BusinessName,
-        BusinessAddress:     req.BusinessAddress,
-        BusinessLocation:    api.GeoPoint{Lat: req.BusinessLocation.Lat, Lng: req.BusinessLocation.Lng},
+        BusinessName:        info.BusinessName,
+        BusinessAddress:     info.BusinessAddress,
+        BusinessLocation:    api.GeoPoint{Lat: info.Location.Lat, Lng: info.Location.Lng},
         DestinationAddress:  req.DestinationAddress,
         DestinationLocation: api.GeoPoint{Lat: req.DestinationLocation.Lat, Lng: req.DestinationLocation.Lng},
         Item:                req.Item,
     }
 
-	ctx := context.Background()
 
-	response, err := h.svc.CreateDelivery(ctx, &apiReq, creatorUID)
+	response, err := h.deliverySvc.CreateDelivery(ctx, &apiReq, creatorUID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errBody(err))
 		return
@@ -49,9 +75,12 @@ func (h *DeliveryHandler) CreateDelivery(c *gin.Context) {
 }
 
 // === GET /deliveries ===
-func (h *DeliveryHandler) ListDeliveries(c *gin.Context, params ListDeliveriesParams) {
+func (h *Handler) ListDeliveries(c *gin.Context, params ListDeliveriesParams) {
 	flt := service.ListFilter{
+		Role: "",
+		BusinessName: "",
 		PageToken: "",
+		CourierID: "",
 		PageSize:  0,
 	}
 	if params.PageSize != nil { flt.PageSize = int(*params.PageSize) }
@@ -66,8 +95,29 @@ func (h *DeliveryHandler) ListDeliveries(c *gin.Context, params ListDeliveriesPa
 		flt.CenterLng = params.Lng
 		flt.RadiusKm  = params.R
 	}
+	// get user's role
+	userUID := c.GetString("uid") // set by (future) auth middleware
+	ctx := context.Background()
+	role, err := h.userSvc.GetUserRole(ctx, userUID)
+	if err != nil {
+		c.JSON(500, errBody(err))
+		return
+	}
+	// else the role is fine and defined
+	flt.Role = role
+	if role == "business"{
+		info, err := h.userSvc.GetBusinessInfo(ctx, userUID)
+		if err != nil {
+			c.JSON(500, errBody(err))
+			return
+		} 
+		flt.BusinessName = info.BusinessName
+	}
+	if role == "courier"{
+		flt.CourierID = userUID
+	}
 
-	list, nextCursor, err := h.svc.ListDeliveries(c, flt)
+	list, nextCursor, err := h.deliverySvc.ListDeliveries(c, flt)
 	if err != nil {
 		c.JSON(500, errBody(err))
 		return
@@ -78,7 +128,7 @@ func (h *DeliveryHandler) ListDeliveries(c *gin.Context, params ListDeliveriesPa
 
 
 // POST / deliveries/id/accept
-func (h *DeliveryHandler) AcceptDelivery(c *gin.Context, deliveryID string) {
+func (h *Handler) AcceptDelivery(c *gin.Context, deliveryID string) {
 	// authenticated courier UID from Gin context
 	courierUID, ok := c.Get("uid")             
 	if !ok || courierUID == "" {
@@ -86,7 +136,7 @@ func (h *DeliveryHandler) AcceptDelivery(c *gin.Context, deliveryID string) {
 		return
 	}
 
-	updated, err := h.svc.AcceptDelivery(c, deliveryID, courierUID.(string))
+	updated, err := h.deliverySvc.AcceptDelivery(c, deliveryID, courierUID.(string))
 
 	switch {
 	case err == nil:
@@ -103,7 +153,8 @@ func (h *DeliveryHandler) AcceptDelivery(c *gin.Context, deliveryID string) {
 	}
 }
 
-func (h *DeliveryHandler) UpdateDelivery(c *gin.Context, deliveryID string) {
+// PATCH / deliveries/id/
+func (h *Handler) UpdateDelivery(c *gin.Context, deliveryID string) {
 
 	// parse & validate JSON body
 	var patch DeliveryPatch                        // struct from openapi.gen.go
@@ -125,7 +176,7 @@ func (h *DeliveryHandler) UpdateDelivery(c *gin.Context, deliveryID string) {
 		return
 	}
 
-	updated, err := h.svc.UpdateDeliveryStatus(c, deliveryID, string(*patch.Status), courierUID.(string))
+	updated, err := h.deliverySvc.UpdateDeliveryStatus(c, deliveryID, string(*patch.Status), courierUID.(string))
 
 	// map service-level errors to HTTP responses
 	var InvalidTransition service.ErrInvalidTransition
@@ -142,4 +193,54 @@ func (h *DeliveryHandler) UpdateDelivery(c *gin.Context, deliveryID string) {
 func errBody(e error) Error {
 	msg := e.Error()
 	return Error{Message: &msg}
+}
+
+// GET /me
+func (h *Handler) GetMe(c *gin.Context) {
+	uid, ok := c.Get("uid")
+	if !ok || uid == "" {
+		c.JSON(http.StatusUnauthorized, errBody(errors.New("missing auth UID")))
+		return
+	}
+	userID := uid.(string)
+
+	ctx := context.Background()
+
+	// Try to get user role first
+	role, err := h.userSvc.GetUserRole(ctx, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errBody(err))
+		return
+	}
+	if role == "business" {
+		info, err := h.userSvc.GetBusinessInfo(ctx, userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errBody(err))
+			return
+		}
+		c.JSON(http.StatusOK, OneOfUserFromBusiness(info))	
+	} else if role == "courier"{
+		info, err := h.userSvc.GetCourierInfo(ctx, userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errBody(err))
+			return
+		}
+		c.JSON(http.StatusOK, OneOfUserFromCourier(info))
+	} else {
+		c.JSON(http.StatusBadRequest, errBody(errors.New("unsupported role")))
+
+	}
+}
+
+
+func OneOfUserFromBusiness(u *api.BusinessUser) api.OneOfUser {
+	var wrapper api.OneOfUser
+	_ = wrapper.FromBusinessUser(*u)
+	return wrapper
+}
+
+func OneOfUserFromCourier(u *api.CourierUser) api.OneOfUser {
+	var wrapper api.OneOfUser
+	_ = wrapper.FromCourierUser(*u)
+	return wrapper
 }
