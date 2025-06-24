@@ -41,18 +41,18 @@ const (
 
 // Delivery defines model for Delivery.
 type Delivery struct {
-	AssignedTo          *string        `json:"assignedTo"`
-	BusinessAddress     string         `json:"businessAddress"`
-	BusinessId          *string        `json:"businessId,omitempty"`
-	BusinessLocation    GeoPoint       `json:"businessLocation"`
-	BusinessName        string         `json:"businessName"`
-	CreatedAt           *time.Time     `json:"createdAt,omitempty"`
-	CreatedBy           *string        `json:"createdBy,omitempty"`
-	DestinationAddress  string         `json:"destinationAddress"`
-	DestinationLocation GeoPoint       `json:"destinationLocation"`
-	Id                  *string        `json:"id,omitempty"`
-	Item                string         `json:"item"`
-	Status              DeliveryStatus `json:"status"`
+	AssignedTo          *string        `firestore:"assignedTo"`
+	BusinessAddress     string         `firestore:"businessAddress"`
+	BusinessId          *string        `firestore:"businessId,omitempty"`
+	BusinessLocation    GeoPoint       `firestore:"businessLocation"`
+	BusinessName        string         `firestore:"businessName"`
+	CreatedAt           *time.Time     `firestore:"createdAt,omitempty"`
+	CreatedBy           *string        `firestore:"createdBy,omitempty"`
+	DestinationAddress  string         `firestore:"destinationAddress"`
+	DestinationLocation GeoPoint       `firestore:"destinationLocation"`
+	Id                  *string        `firestore:"id,omitempty"`
+	Item                string         `firestore:"item"`
+	Status              DeliveryStatus `firestore:"status"`
 }
 
 // DeliveryStatus defines model for Delivery.Status.
@@ -60,18 +60,18 @@ type DeliveryStatus string
 
 // DeliveryCreate defines model for DeliveryCreate.
 type DeliveryCreate struct {
-	BusinessAddress     string   `json:"businessAddress"`
-	BusinessLocation    GeoPoint `json:"businessLocation"`
-	BusinessName        string   `json:"businessName"`
-	DestinationAddress  string   `json:"destinationAddress"`
-	DestinationLocation GeoPoint `json:"destinationLocation"`
-	Item                string   `json:"item"`
+	BusinessAddress     string   `firestore:"businessAddress"`
+	BusinessLocation    GeoPoint `firestore:"businessLocation"`
+	BusinessName        string   `firestore:"businessName"`
+	DestinationAddress  string   `firestore:"destinationAddress"`
+	DestinationLocation GeoPoint `firestore:"destinationLocation"`
+	Item                string   `firestore:"item"`
 }
 
 // DeliveryPatch defines model for DeliveryPatch.
 type DeliveryPatch struct {
-	AssignedTo *string              `json:"assignedTo"`
-	Status     *DeliveryPatchStatus `json:"status,omitempty"`
+	AssignedTo *string              `firestore:"assignedTo"`
+	Status     *DeliveryPatchStatus `firestore:"status,omitempty"`
 }
 
 // DeliveryPatchStatus defines model for DeliveryPatch.Status.
@@ -79,13 +79,13 @@ type DeliveryPatchStatus string
 
 // Error defines model for Error.
 type Error struct {
-	Message *string `json:"message,omitempty"`
+	Message *string `firestore:"message,omitempty"`
 }
 
 // GeoPoint defines model for GeoPoint.
 type GeoPoint struct {
-	Lat float64 `json:"lat"`
-	Lng float64 `json:"lng"`
+	Lat float64 `firestore:"lat"`
+	Lng float64 `firestore:"lng"`
 }
 
 // PageSize defines model for PageSize.
