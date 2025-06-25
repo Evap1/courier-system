@@ -135,7 +135,18 @@ func (h *Handler) AcceptDelivery(c *gin.Context, deliveryID string) {
 		c.JSON(http.StatusUnauthorized, errBody(errors.New("missing auth UID")))
 		return
 	}
+	ctx := context.Background()
+	role, err := h.userSvc.GetUserRole(ctx, courierUID.(string))
+	if err != nil {
+		c.JSON(500, errBody(err))
+		return
+	}
 
+	if role != "courier"{
+		c.JSON(http.StatusBadRequest, errBody(errors.New("Only courier can accept a delivery")))
+		return
+	}
+	// here it's only a courier
 	updated, err := h.deliverySvc.AcceptDelivery(c, deliveryID, courierUID.(string))
 
 	switch {
@@ -176,7 +187,20 @@ func (h *Handler) UpdateDelivery(c *gin.Context, deliveryID string) {
 		return
 	}
 
+	ctx := context.Background()
+	role, err := h.userSvc.GetUserRole(ctx, courierUID.(string))
+	if err != nil {
+		c.JSON(500, errBody(err))
+		return
+	}
+
+	if role != "courier"{
+		c.JSON(http.StatusBadRequest, errBody(errors.New("Only courier can update a delivery")))
+		return
+	}
+	// here its only a courier
 	updated, err := h.deliverySvc.UpdateDeliveryStatus(c, deliveryID, string(*patch.Status), courierUID.(string))
+
 
 	// map service-level errors to HTTP responses
 	var InvalidTransition service.ErrInvalidTransition
