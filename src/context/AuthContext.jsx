@@ -13,6 +13,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log("user:", firebaseUser); // ← ADD THIS
+
       if (firebaseUser) {
         setUser(firebaseUser);
         const docRef = doc(db, "users", firebaseUser.uid);

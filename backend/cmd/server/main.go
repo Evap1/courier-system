@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+    "github.com/gin-contrib/cors"
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/gin-gonic/gin"
@@ -54,6 +55,16 @@ func main() {
 
 	//  HTTP router using gin
 	router := gin.Default()
+
+    // allow frontend requests (CORS)
+    router.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"http://localhost:3000"},
+        AllowMethods:     []string{"GET", "POST", "PATCH", "OPTIONS"},
+        AllowHeaders:     []string{"Authorization", "Content-Type"},
+        ExposeHeaders:    []string{"X-Next-Page-Token"},
+        AllowCredentials: true,
+    }))
+
 	router.Use(auth.Middleware(authClient))          // protect everything
 	httptransport.RegisterHandlers(router, handler)  // all routes from openapi.gen.go 
 

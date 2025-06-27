@@ -87,7 +87,7 @@ type Delivery struct {
 	CreatedBy           *string        `firestore:"createdBy,omitempty"`
 	DestinationAddress  string         `firestore:"destinationAddress"`
 	DestinationLocation GeoPoint       `firestore:"destinationLocation"`
-	Id                  *string        `firestore:"id,omitempty"`
+	Id                  *string        `firestore:"id,omitempty" json:"id,omitempty"`
 	Item                string         `firestore:"item"`
 	Status              DeliveryStatus `firestore:"status"`
 }
