@@ -20,7 +20,7 @@ export const Business = () => {
   const [error, setError] = useState(null);
 
   // to allow courier tracking to appear/ disappear
-  const [visibleCourierId, setVisibleCourierId] = useState(null);
+  const [visibleDelivery, setVisibleDelivery] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -125,24 +125,21 @@ export const Business = () => {
                     <div>
                       <button
                         onClick={() => {
-                          if (visibleCourierId === delivery.assignedTo ) {
-                            setVisibleCourierId(null); // hide the map
+                          if (visibleDelivery?.id === delivery.id) {
+                            setVisibleDelivery(null); // close current map
                           } else {
-                            setVisibleCourierId(delivery.assignedTo); // show the map
+                            setVisibleDelivery(delivery); // open new map
                           }
                         }}
                       >
-                        {(visibleCourierId === delivery.assignedTo) ? "Hide Map" : "Open Map"}
+                        {visibleDelivery?.id === delivery.id ? "Hide Map" : "Open Map"}
                       </button>
-                      {visibleCourierId === delivery.assignedTo && (
-                        <div style={{ marginTop: "10px" }}>
-                          <CourierMap courierId={delivery.assignedTo} />
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <div>
-                        {(delivery.status === "accepted") ? "Courier is on the way" : "Unassigned"}
+                        {(delivery.status === "accepted") ? "Courier is on the way" : ""}
+                        {(delivery.status === "posted") ? "Unassigned" : ""}
+                        {(delivery.status === "delivered") ? "Completed" : ""}
                     </div>
                   )}
                   </td>
@@ -150,6 +147,12 @@ export const Business = () => {
               ))}
             </tbody>
           </table>
+          {visibleDelivery && (
+            <div style={{ marginTop: "30px" }}>
+              <h3>Tracking Courier for Delivery {visibleDelivery.item}</h3>
+              <CourierMap courierId={visibleDelivery.assignedTo} />
+            </div>
+          )}
         </div>
       )}
     </section>

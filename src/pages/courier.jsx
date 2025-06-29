@@ -93,6 +93,76 @@ export const Courier = () => {
   const [navigatingAddress, setNavigatingAddress] = useState(null);
   const [directions, setDirections] = useState(null);
 
+
+  // for testing
+  const TEST_OVERRIDE = true;
+  const testCoords =  [
+    { lat: 32.618687, lng: 35.291183 },
+
+    { lat: 32.61832, lng: 35.290582 },
+    { lat: 32.618305, lng: 35.290581 },
+    { lat: 32.618579, lng: 35.289389 },
+    { lat: 32.618605, lng: 35.289347 },
+    { lat: 32.618647, lng: 35.289306 },
+    { lat: 32.618697, lng: 35.289279 },
+    { lat: 32.618723, lng: 35.289249 },
+    { lat: 32.618741, lng: 35.289212 },
+    { lat: 32.618751, lng: 35.289171 },
+    { lat: 32.618751, lng: 35.289128 },
+    { lat: 32.618741, lng: 35.289087 },
+    { lat: 32.618723, lng: 35.28905 },
+    { lat: 32.618704, lng: 35.289026 },
+    { lat: 32.618676, lng: 35.289005 },
+    { lat: 32.618645, lng: 35.288992 },
+    { lat: 32.61615, lng: 35.288888 },
+    { lat: 32.616133, lng: 35.288853 },
+    { lat: 32.616083, lng: 35.288732 },
+    { lat: 32.616008, lng: 35.288453 },
+    { lat: 32.615893, lng: 35.288025 },
+    { lat: 32.615858, lng: 35.287891 },
+    { lat: 32.615717, lng: 35.287365 },
+    { lat: 32.615692, lng: 35.287197 },
+    { lat: 32.615715, lng: 35.287035 },
+    { lat: 32.615744, lng: 35.28694 },
+    { lat: 32.615766, lng: 35.286897 },
+    { lat: 32.615774, lng: 35.286848 },
+    { lat: 32.615769, lng: 35.286804 },
+    { lat: 32.61575, lng: 35.286759 },
+    { lat: 32.615719, lng: 35.286725 },
+    { lat: 32.61568, lng: 35.286704 },
+    { lat: 32.615633, lng: 35.286643 },
+    { lat: 32.615579, lng: 35.28659 },
+    { lat: 32.615524, lng: 35.286552 },
+    { lat: 32.61428, lng: 35.285757 },
+    { lat: 32.614289, lng: 35.285729 },
+    { lat: 32.614289, lng: 35.285698 },
+    { lat: 32.61428, lng: 35.285669 },
+
+    { lat: 32.613654, lng: 35.285364 },
+    { lat: 32.613164, lng: 35.285054 },
+    { lat: 32.612966, lng: 35.284929 },
+    { lat: 32.612858, lng: 35.28486 },
+    { lat: 32.611878, lng: 35.28424 },
+    { lat: 32.611819, lng: 35.284202 },
+    { lat: 32.611777, lng: 35.284158 },
+    { lat: 32.611734, lng: 35.284099 },
+    { lat: 32.61171, lng: 35.284048 },
+    { lat: 32.611703, lng: 35.284002 },
+    { lat: 32.611702, lng: 35.283938 },
+    { lat: 32.611725, lng: 35.283896 },
+    { lat: 32.611861, lng: 35.28363 },
+    { lat: 32.611929, lng: 35.283504 },
+    { lat: 32.612051, lng: 35.28324 },
+    { lat: 32.612152, lng: 35.283016 },
+    { lat: 32.612295, lng: 35.282702 },
+    { lat: 32.612413, lng: 35.282441 },
+    { lat: 32.612525, lng: 35.282196 },
+    { lat: 32.612749, lng: 35.281703 },
+    { lat: 32.613097, lng: 35.280942 },
+    { lat: 32.61322, lng: 35.280668 }
+  ];
+  const [simulatedPos, setSimulatedPos] = useState(null);
+  
   const zoom = zoomForKm(radiusKm);
 
   /** Load the Google Maps SDK */
@@ -101,6 +171,34 @@ export const Courier = () => {
     libraries,
   });
 
+  // for testing
+  useEffect(() => {
+    if (!TEST_OVERRIDE || !user) return;
+
+    window.setSimulatedPos = setSimulatedPos;
+
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i >= testCoords.length) return clearInterval(interval);
+  
+      const point = testCoords[i++];
+      setSimulatedPos(point);
+  
+      // ⬇️ send simulated position to Firestore so business view sees it
+      import("firebase/firestore").then(({ doc, setDoc, Timestamp }) => {
+        import("../firebase").then(({ db }) => {
+          setDoc(doc(db, "couriers", user.uid, "location", "current"), {
+            lat: point.lat,
+            lng: point.lng,
+            updatedAt: Timestamp.now(),
+          });
+        });
+      });
+  
+    }, 3000);
+  
+    return () => clearInterval(interval);
+  }, [user]);
 
   /** Start watching the device’s location as soon as the component mounts */
   useEffect(() => {
@@ -228,18 +326,18 @@ export const Courier = () => {
     <>
       <GoogleMap
         mapContainerStyle={containerStyle}
-        center={pos}
+        center={TEST_OVERRIDE && simulatedPos ? simulatedPos : pos}
         zoom={zoom}
         onZoomChanged={handleZoom}
         onLoad={(m) => (mapRef.current = m)}
         options={mapOptions}
       >
         {/* courier's current location */}
-        <Marker position={pos} />
+        <Marker position={TEST_OVERRIDE && simulatedPos ? simulatedPos : pos} />
   
         {/* radius circle */}
         <CircleF
-          center={pos}
+          center={TEST_OVERRIDE && simulatedPos ? simulatedPos : pos}
           radius={radiusKm * 1000}
           options={{
             strokeColor: "#1e90ff",
@@ -266,7 +364,7 @@ export const Courier = () => {
           };
 
           // the delivery is picked_up by the courier, 
-          if (d.Status === "picked_up") return null;
+          if (d.Status === "picked_up" || d.Status === "delivered") return null;
           const icon = d.Status === "accepted" ? markerIconAccepted : markerIconPosted;
           return (
             <Marker
@@ -280,20 +378,34 @@ export const Courier = () => {
         })}
 
         {/* dest markers when status is picked_up */}
-        {posted
-          .filter((d) => d.Status === "picked_up")
-          .map((d) => (
+        {posted.map((d, i, arr) => {
+          // count how many deliveries share the same lat/lng before this one
+          const duplicatesBefore = arr.slice(0, i).filter(
+            (other) =>
+              other.DestinationLocation.lat === d.DestinationLocation.lat &&
+              other.DestinationLocation.lng === d.DestinationLocation.lng
+          ).length;
+
+          const offset = 0.00003 * duplicatesBefore; // 3 m per duplicate
+          const adjustedPosition = {
+            lat: d.DestinationLocation.lat + offset,
+            lng: d.DestinationLocation.lng + offset,
+          };
+
+          // the delivery is picked_up by the courier, 
+          if (d.Status !== "picked_up") return null;
+          return (
             <Marker
               key={`dest-${d.Id}`}
-              position={d.DestinationLocation}
+              position={adjustedPosition}
               icon={markerIconDestination}
               onClick={() => setSelectedDelivery(d)}
             />
-          ))}
+          );
+        })}
 
         {/* courier live navigation */}
-        {directions && <DirectionsRenderer directions={directions} />}
-
+        {directions && <DirectionsRenderer directions={directions}  options={{ suppressMarkers: true }} />}
       </GoogleMap>
       
       {/* radius slider UI */}
@@ -377,24 +489,35 @@ export const Courier = () => {
             Picked up?
           </button>
           )}
+
           {selectedDelivery.Status === "picked_up" && (
-            <button
-            onClick={async () => {
-              try {
-                await updateDeliveryStatus(selectedDelivery.Id, "delivered");
-                setSelectedDelivery(null);
-                setNavigatingAddress(null); //  stop navigation
-              } catch (err) {
-                setSelectedDelivery(null);
-                setNavigatingAddress(null); //  stop navigation ?
-                setDirections(null);
-                console.error(err)
-              }
-            }}
-            style={{ marginRight: 8 }}
-          >
-            Delivered?
-          </button>
+            <>
+              <button
+                onClick={async () => {
+                  try{
+                    await updateDeliveryStatus(selectedDelivery.Id, "delivered");
+                    setSelectedDelivery(null);
+                    setNavigatingAddress(null);  //  stop navigation
+                    setDirections(null);
+                  } catch (err) {
+                    setSelectedDelivery(null);
+                    setNavigatingAddress(null); //  stop navigation ?
+                    setDirections(null);
+                    console.error(err)
+                  }
+                }}
+              >
+                Delivered?
+              </button>
+              <button
+                onClick={() => {
+                  setNavigatingAddress(selectedDelivery.DestinationLocation);
+                  setSelectedDelivery(null);
+                }}
+              >
+                Navigate to this destination
+              </button>
+            </>
           )}
           <button onClick={() => setSelectedDelivery(null)} style={{ marginTop: 10 }}>Cancel</button>
         
