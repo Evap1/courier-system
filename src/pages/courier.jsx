@@ -4,11 +4,21 @@ import { useAuth } from "../context/AuthContext";
 // pages/courier.jsx - for now
 import { useState, useEffect , useRef} from "react";
 import { GoogleMap, Marker, useJsApiLoader, CircleF } from "@react-google-maps/api";
-import { getWithAuth, postWithAuth } from "../api/api";
-// for expandung nearby deliveries
+import { getWithAuth, postWithAuth, patchWithAuth } from "../api/api";
+
+// for nvigation
+import { DirectionsRenderer } from "@react-google-maps/api";
+
+// for FCM
+// import { messaging } from "../firebase";
+// import { getToken, onMessage } from "firebase/messaging";
 
 const containerStyle = { width: "100%", height: "100vh" };
-const markerIcon = "http://maps.google.com/mapfiles/ms/icons/purple-dot.png";
+
+const markerIconPosted    = "http://maps.google.com/mapfiles/ms/icons/purple-dot.png";
+const markerIconAccepted  = "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
+const markerIconDestination  = "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
+
 const libraries        = ["places"];          // memoised - avoids the “new array” warning
 
 const mapOptions = {
@@ -70,24 +80,26 @@ export const Courier = () => {
   const prevRadius = useRef(null);
   const timeoutRef = useRef(null);
 
+  /** Store the courier’s current coordinates */
+  const [pos, setPos] = useState(null);
+  const [posted, setPosted]     = useState([]); // all “posted” deliveries
+  const [radiusKm, setRadiusKm] = useState(5);
+  const [geoError, setGeoError] = useState(null);
   // for info pop-up
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   // for success /failure pop up
   const [feedback, setFeedback] = useState(null); 
+  // for navigation to appear / disappear
+  const [navigatingAddress, setNavigatingAddress] = useState(null);
+  const [directions, setDirections] = useState(null);
 
+  const zoom = zoomForKm(radiusKm);
 
   /** Load the Google Maps SDK */
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries,
   });
-
-  /** Store the courier’s current coordinates */
-  const [pos, setPos] = useState(null);
-  const [posted, setPosted]     = useState([]); // all “posted” deliveries
-  const [radiusKm, setRadiusKm] = useState(5);
-  const [geoError, setGeoError] = useState(null);
-  const zoom = zoomForKm(radiusKm);
 
 
   /** Start watching the device’s location as soon as the component mounts */
@@ -130,6 +142,10 @@ export const Courier = () => {
             BusinessLocation: {
               lat: d.BusinessLocation.Lat,
               lng: d.BusinessLocation.Lng
+            },
+            DestinationLocation: {
+              lat: d.DestinationLocation.Lat,
+              lng: d.DestinationLocation.Lng
             }
           }));
           console.log("IDs:", data.map(d => d.Id));
@@ -161,6 +177,16 @@ export const Courier = () => {
     }
   };
 
+  const updateDeliveryStatus = async (id, newStatus) => {
+    try {
+      await patchWithAuth(`http://localhost:8080/deliveries/${id}`, {
+        status: newStatus,
+      });
+      alert("Status changed to " + newStatus);
+    } catch (err) {
+      alert("Status change failed " + err);
+    }
+  };
 
   /* sync radius ← zoom (map events) */
   const handleZoom = () => {
@@ -171,6 +197,26 @@ export const Courier = () => {
     if (Math.abs(km - radiusKm) >= 1) setRadiusKm(km);
   };
 
+  // to calculate and show direstions and navigation
+  useEffect(() => {
+    if (!navigatingAddress || !pos || !window.google) return;
+  
+    const directionsService = new window.google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: pos,
+        destination: navigatingAddress,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK") {
+          setDirections(result);
+        } else {
+          console.error("Directions request failed due to", status);
+        }
+      }
+    );
+  }, [navigatingAddress, pos]);
 
   /* Handle the three loading/error states cleanly */
   if (loadError)       return <p style={{ color: "red" }}>{loadError}</p>;
@@ -219,18 +265,37 @@ export const Courier = () => {
             lng: d.BusinessLocation.lng + offset,
           };
 
+          // the delivery is picked_up by the courier, 
+          if (d.Status === "picked_up") return null;
+          const icon = d.Status === "accepted" ? markerIconAccepted : markerIconPosted;
           return (
             <Marker
               key={d.Id}
               position={adjustedPosition}
-              icon={markerIcon}
+              icon={icon}
               title={`${d.Item} @ ${d.BusinessName}`}
               onClick={() => setSelectedDelivery(d)}
             />
           );
         })}
+
+        {/* dest markers when status is picked_up */}
+        {posted
+          .filter((d) => d.Status === "picked_up")
+          .map((d) => (
+            <Marker
+              key={`dest-${d.Id}`}
+              position={d.DestinationLocation}
+              icon={markerIconDestination}
+              onClick={() => setSelectedDelivery(d)}
+            />
+          ))}
+
+        {/* courier live navigation */}
+        {directions && <DirectionsRenderer directions={directions} />}
+
       </GoogleMap>
-  
+      
       {/* radius slider UI */}
       <div
         style={{
@@ -276,7 +341,10 @@ export const Courier = () => {
           <p><strong>Pickup:</strong> {selectedDelivery.BusinessAddress}</p>
           <p><strong>Drop-off:</strong> {selectedDelivery.DestinationAddress}</p>
           <p><strong>By:</strong> {selectedDelivery.BusinessName}</p>
-          <button
+
+
+          {selectedDelivery.Status === "posted" && (
+            <button
             onClick={async () => {
               try {
                 await acceptDelivery(selectedDelivery.Id);
@@ -291,7 +359,45 @@ export const Courier = () => {
           >
             Accept Delivery
           </button>
-          <button onClick={() => setSelectedDelivery(null)}>Cancel</button>
+          )}
+          {selectedDelivery.Status === "accepted" && (
+            <button
+            onClick={async () => {
+              try {
+                await updateDeliveryStatus(selectedDelivery.Id, "picked_up");
+                setSelectedDelivery(null);
+                setNavigatingAddress(selectedDelivery.DestinationLocation); // navigation starts
+              } catch (err) {
+                setSelectedDelivery(null);
+                console.error(err)
+              }
+            }}
+            style={{ marginRight: 8 }}
+          >
+            Picked up?
+          </button>
+          )}
+          {selectedDelivery.Status === "picked_up" && (
+            <button
+            onClick={async () => {
+              try {
+                await updateDeliveryStatus(selectedDelivery.Id, "delivered");
+                setSelectedDelivery(null);
+                setNavigatingAddress(null); //  stop navigation
+              } catch (err) {
+                setSelectedDelivery(null);
+                setNavigatingAddress(null); //  stop navigation ?
+                setDirections(null);
+                console.error(err)
+              }
+            }}
+            style={{ marginRight: 8 }}
+          >
+            Delivered?
+          </button>
+          )}
+          <button onClick={() => setSelectedDelivery(null)} style={{ marginTop: 10 }}>Cancel</button>
+        
         </div>
       )}
       {feedback && (

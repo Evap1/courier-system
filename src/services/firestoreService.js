@@ -35,11 +35,19 @@ export const createDeliveryDocument = async (businessId, businessName, item, src
       businessAddress: src,
       businessLocation: srcLoc,
       destinationAddress: dst.formatted,
-      destinationLocation: dst.location,
+      destinationLocation: {
+        lat: dst.location.lat,
+        lng: dst.location.lng
+      },
       createdAt: Timestamp.now(),
       assignedTo,
       status
     });
+    console.log(`destinationLocation lat: ${dst.location.lat}`);
+
+    console.log(`destinationLocation lng: ${dst.location.lng}`);
+
+
     console.log(`Delivery created with ID: ${docRef.id}`);
     //return docRef.id;
   } catch (error) {

@@ -7,6 +7,8 @@ import { AddressInput } from "../components/address";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 
+import CourierMap from "../components/courierMap";
+
 export const Business = () => {
   const { user } = useAuth();
   const [deliveries, setDeliveries] = useState([]);
@@ -16,6 +18,9 @@ export const Business = () => {
 
   const [destination, setDestination] = useState("");
   const [error, setError] = useState(null);
+
+  // to allow courier tracking to appear/ disappear
+  const [visibleCourierId, setVisibleCourierId] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -108,6 +113,7 @@ export const Business = () => {
               </tr>
             </thead>
             <tbody>
+              {/* courier's live location view */}
               {deliveries.map(delivery => (
                 <tr key={delivery.id}>
                   <td>{delivery.item}</td>
@@ -115,11 +121,30 @@ export const Business = () => {
                   <td>{delivery.destinationAddress}</td>
                   <td>{delivery.createdAt?.toDate().toLocaleString()}</td>
                   <td>
-                    {delivery.assignedTo ? (
-                      <button onClick={() => alert("TODO: Map integration")}>Open Map</button>
-                    ) : (
-                      "Unassigned"
-                    )}
+                  {delivery.assignedTo && delivery.status !== "accepted" ? (
+                    <div>
+                      <button
+                        onClick={() => {
+                          if (visibleCourierId === delivery.assignedTo ) {
+                            setVisibleCourierId(null); // hide the map
+                          } else {
+                            setVisibleCourierId(delivery.assignedTo); // show the map
+                          }
+                        }}
+                      >
+                        {(visibleCourierId === delivery.assignedTo) ? "Hide Map" : "Open Map"}
+                      </button>
+                      {visibleCourierId === delivery.assignedTo && (
+                        <div style={{ marginTop: "10px" }}>
+                          <CourierMap courierId={delivery.assignedTo} />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                        {(delivery.status === "accepted") ? "Courier is on the way" : "Unassigned"}
+                    </div>
+                  )}
                   </td>
                 </tr>
               ))}

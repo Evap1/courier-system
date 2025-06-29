@@ -25,6 +25,7 @@ const app = initializeApp(firebaseConfig);
 //const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+//export const messaging = getMessaging(app); // for fcm
 export const googleProvider = new GoogleAuthProvider();
 export const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
