@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot, getDoc, doc } from "firebase/firestore";
-import { createDeliveryDocument } from "../services/firestoreService";
 import { AddressInput } from "../components/address";
+// for delivery creation api req
+import { postWithAuth , getWithAuth } from "../api/api";
 
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
@@ -24,20 +25,18 @@ export const Business = () => {
 
   useEffect(() => {
     if (!user) return;
-    // to shgow the name in the header
-    const fetchBusinessName = async () => {
-        try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists()) {
-            setBusinessData(userDoc.data());
-          }
-        } catch (err) {
-          console.error("Error fetching business name:", err);
-        }
-      };
-    
-      fetchBusinessName();
+    // get business info
+    const fetchBusiness = async () => {
+      try {
+        const data = await getWithAuth("http://localhost:8080/me");
+        setBusinessData(data);
+      } catch (err) {
+        console.error("Failed to fetch business info", err);
+      }
+    };
+    fetchBusiness();
 
+    // listener for real-time updates
     const q = query(collection(db, "deliveries"), where("businessId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
     const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -53,24 +52,26 @@ export const Business = () => {
       setError("Item and Destination are required.");
       return;
     }
+    // send api req to create new delivery
     try {
-        // fetch business info from users collection
-        await createDeliveryDocument(
-            user.uid,
-            businessData.businessName,
-            item,
-            businessData.businessAddress,
-            businessData.location,
-            destination,
-            null,
-            "posted"
-          );
-
-        // reset the fields
-        setItem("");
-        setDestination("");
-        setShowForm(false);
-        setError(null);
+      const body = {
+        BusinessName: businessData.businessName,
+        BusinessAddress: businessData.businessAddress,
+        BusinessLocation: businessData.businessLocation,
+        DestinationAddress: destination.formatted,
+        DestinationLocation: {
+          Lat: destination.location.lat,
+          Lng: destination.location.lng
+        },
+        Item: item
+      };
+      await postWithAuth("http://localhost:8080/deliveries", body);
+  
+      // reset the fields
+      setItem("");
+      setDestination("");
+      setShowForm(false);
+      setError(null);
     } catch (err) {
       console.error("Error creating delivery:", err);
       setError("Failed to create delivery");
