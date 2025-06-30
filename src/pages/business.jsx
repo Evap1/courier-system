@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { collection, query, where, onSnapshot, getDoc, doc } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { AddressInput } from "../components/address";
 // for delivery creation api req
 import { postWithAuth , getWithAuth } from "../api/api";
@@ -55,9 +55,9 @@ export const Business = () => {
     // send api req to create new delivery
     try {
       const body = {
-        BusinessName: businessData.businessName,
-        BusinessAddress: businessData.businessAddress,
-        BusinessLocation: businessData.businessLocation,
+        BusinessName: businessData.BusinessName,
+        BusinessAddress: businessData.BusinessAddress,
+        BusinessLocation: businessData.BusinessLocation,
         DestinationAddress: destination.formatted,
         DestinationLocation: {
           Lat: destination.location.lat,
@@ -80,7 +80,7 @@ export const Business = () => {
 
   return (
     <section>
-      <h2>Welcome {businessData.businessName}</h2>
+      <h2>Welcome {businessData.BusinessName}</h2>
       <button onClick={() => setShowForm(!showForm)}>
         {showForm ? "Back to Overview" : "New Delivery"}
       </button>

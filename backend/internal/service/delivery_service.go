@@ -120,7 +120,7 @@ func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter)
 			// by T/F table, choosing the rows with false assigment
 			if dist > *filter.RadiusKm{
 				if filter.Role == "courier"{
-					if d.Status != "posted" || (d.AssignedTo != nil && *d.AssignedTo != filter.CourierID){
+					if (d.AssignedTo != nil && *d.AssignedTo != filter.CourierID){
 						continue
 					}
 				} else { continue }
