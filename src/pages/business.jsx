@@ -18,6 +18,7 @@ export const Business = () => {
   const [businessData, setBusinessData] = useState("");
 
   const [destination, setDestination] = useState("");
+  const [payment, setPayment] = useState(0);
   const [error, setError] = useState(null);
 
   // to allow courier tracking to appear/ disappear
@@ -52,6 +53,14 @@ export const Business = () => {
       setError("Item and Destination are required.");
       return;
     }
+    const parsedPayment = parseFloat(payment);
+
+    if (isNaN(parsedPayment)) {
+      setError("Please enter only numbers for payment");
+      return
+    }
+
+
     // send api req to create new delivery
     try {
       const body = {
@@ -63,7 +72,8 @@ export const Business = () => {
           Lat: destination.location.lat,
           Lng: destination.location.lng
         },
-        Item: item
+        Item: item,
+        Payment: parsedPayment
       };
       await postWithAuth("http://localhost:8080/deliveries", body);
   
@@ -72,6 +82,7 @@ export const Business = () => {
       setDestination("");
       setShowForm(false);
       setError(null);
+      setPayment(0);
     } catch (err) {
       console.error("Error creating delivery:", err);
       setError("Failed to create delivery");
@@ -90,6 +101,11 @@ export const Business = () => {
           <label>
             Item:
             <input value={item} onChange={(e) => setItem(e.target.value)} required />
+          </label>
+          <br />
+          <label>
+            Payment:
+            <input value={payment} onChange={(e) => setPayment(e.target.value)} required />
           </label>
           <br />
           <label>

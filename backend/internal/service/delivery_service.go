@@ -46,6 +46,7 @@ func (s *DeliveryService) CreateDelivery(ctx context.Context, req *api.DeliveryC
 		Item:                 req.Item,
 		Status:               api.DeliveryStatusPosted,
 		CreatedAt:            &now,
+		Payment:			  req.Payment,
 	}
 
 	_, err := s.firestore.Collection("deliveries").Doc(id).Set(ctx, delivery)
@@ -250,7 +251,10 @@ func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, deliveryID s
 		
 		// dispatch the courier from the delivery
 		// see if nil is ok or emprty string is better
-		if newStatus == StatusDelivered { d.AssignedTo = nil}
+		if newStatus == StatusDelivered { 
+			d.AssignedTo = nil;
+			d.DeliveredBy = &courierUID;
+		}
 		snap = innerSnap
 		// commit changes to DB
 		return tx.Set(docRef, d)

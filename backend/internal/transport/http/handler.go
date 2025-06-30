@@ -63,6 +63,7 @@ func (h *Handler) CreateDelivery(c *gin.Context) {
         DestinationAddress:  req.DestinationAddress,
         DestinationLocation: api.GeoPoint{Lat: req.DestinationLocation.Lat, Lng: req.DestinationLocation.Lng},
         Item:                req.Item,
+		Payment:			 req.Payment,
     }
 
 
@@ -267,4 +268,39 @@ func OneOfUserFromCourier(u *api.CourierUser) api.OneOfUser {
 	var wrapper api.OneOfUser
 	_ = wrapper.FromCourierUser(*u)
 	return wrapper
+}
+
+
+// GET couriers/
+func (h *Handler) ListCouriers(c *gin.Context) {
+	uid := c.GetString("uid")
+	ctx := context.Background()
+	role, err := h.userSvc.GetUserRole(ctx, uid)
+	if err != nil || role != "admin" {
+		c.JSON(http.StatusUnauthorized, errBody(errors.New("unauthorized")))
+		return
+	}
+	couriers, err := h.userSvc.GetAllCouriers(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errBody(err))
+		return
+	}
+	c.JSON(http.StatusOK, couriers)
+}
+
+// GET businesses/
+func (h *Handler) ListBusinesses(c *gin.Context) {
+	uid := c.GetString("uid")
+	ctx := context.Background()
+	role, err := h.userSvc.GetUserRole(ctx, uid)
+	if err != nil || role != "admin" {
+		c.JSON(http.StatusUnauthorized, errBody(errors.New("unauthorized")))
+		return
+	}
+	businesses, err := h.userSvc.GetAllBusinesses(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errBody(err))
+		return
+	}
+	c.JSON(http.StatusOK, businesses)
 }

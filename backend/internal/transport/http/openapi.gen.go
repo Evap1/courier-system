@@ -5,7 +5,6 @@ package httptransport
 
 import (
 	"encoding/json"
-
 	"fmt"
 	"net/http"
 	"time"
@@ -85,10 +84,12 @@ type Delivery struct {
 	BusinessName        string         `firestore:"businessName"`
 	CreatedAt           *time.Time     `firestore:"createdAt,omitempty"`
 	CreatedBy           *string        `firestore:"createdBy,omitempty"`
+	DeliveredBy         *string        `firestore:"deliveredBy"`
 	DestinationAddress  string         `firestore:"destinationAddress"`
 	DestinationLocation GeoPoint       `firestore:"destinationLocation"`
-	Id                  *string        `firestore:"id,omitempty" json:"id,omitempty"`
+	Id                  *string        `firestore:"id,omitempty"`
 	Item                string         `firestore:"item"`
+	Payment             float64        `firestore:"payment"`
 	Status              DeliveryStatus `firestore:"status"`
 }
 
@@ -103,6 +104,7 @@ type DeliveryCreate struct {
 	DestinationAddress  string   `firestore:"destinationAddress"`
 	DestinationLocation GeoPoint `firestore:"destinationLocation"`
 	Item                string   `firestore:"item"`
+	Payment             float64  `firestore:"payment"`
 }
 
 // DeliveryPatch defines model for DeliveryPatch.
@@ -157,10 +159,10 @@ type ListDeliveriesParams struct {
 // ListDeliveriesParamsStatus defines parameters for ListDeliveries.
 type ListDeliveriesParamsStatus string
 
-// CreateDeliveryJSONRequestBody defines body for CreateDelivery for application/firestore ContentType.
+// CreateDeliveryJSONRequestBody defines body for CreateDelivery for application/json ContentType.
 type CreateDeliveryJSONRequestBody = DeliveryCreate
 
-// UpdateDeliveryJSONRequestBody defines body for UpdateDelivery for application/firestore ContentType.
+// UpdateDeliveryJSONRequestBody defines body for UpdateDelivery for application/json ContentType.
 type UpdateDeliveryJSONRequestBody = DeliveryPatch
 
 // AsBusinessUser returns the union data inside the OneOfUser as a BusinessUser
@@ -227,6 +229,12 @@ func (t *OneOfUser) UnmarshalJSON(b []byte) error {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// List all businesses
+	// (GET /businesses)
+	ListBusinesses(c *gin.Context)
+	// List all couriers
+	// (GET /couriers)
+	ListCouriers(c *gin.Context)
 	// List deliveries (optional geo-filter)
 	// (GET /deliveries)
 	ListDeliveries(c *gin.Context, params ListDeliveriesParams)
@@ -252,6 +260,36 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// ListBusinesses operation middleware
+func (siw *ServerInterfaceWrapper) ListBusinesses(c *gin.Context) {
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListBusinesses(c)
+}
+
+// ListCouriers operation middleware
+func (siw *ServerInterfaceWrapper) ListCouriers(c *gin.Context) {
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListCouriers(c)
+}
 
 // ListDeliveries operation middleware
 func (siw *ServerInterfaceWrapper) ListDeliveries(c *gin.Context) {
@@ -430,6 +468,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
+	router.GET(options.BaseURL+"/businesses", wrapper.ListBusinesses)
+	router.GET(options.BaseURL+"/couriers", wrapper.ListCouriers)
 	router.GET(options.BaseURL+"/deliveries", wrapper.ListDeliveries)
 	router.POST(options.BaseURL+"/deliveries", wrapper.CreateDelivery)
 	router.PATCH(options.BaseURL+"/deliveries/:id", wrapper.UpdateDelivery)

@@ -316,7 +316,7 @@ export const Courier = () => {
     <>
       <GoogleMap
         mapContainerStyle={containerStyle}
-        //center={pos} grayed-out to allow 
+        center={manualPan ? undefined : pos} // if manual pan, dont recenter and move. if pressed recenter, keep moving the position
         zoom={zoom}
         onZoomChanged={handleZoom} // to change radium of query and circle view
         onDragStart={() => setManualPan(true)} // to allow manual drag

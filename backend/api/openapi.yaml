@@ -121,6 +121,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OneOfUser'
+  /couriers:
+    get:
+      summary: List all couriers
+      operationId: listCouriers
+      responses:
+        '200':
+          description: A list of couriers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourierUser'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /businesses:
+    get:
+      summary: List all businesses
+      operationId: listBusinesses
+      responses:
+        '200':
+          description: A list of businesses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessUser'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
 components:
 
@@ -152,11 +203,15 @@ components:
           type: string
           enum: [posted, accepted, picked_up, delivered]
         assignedTo:       { type: string, nullable: true }
+        deliveredBy:       { type: string, nullable: true }
+        payment:       { type: number, format: double}
+
+
         createdAt:        { type: string, format: date-time, readOnly: true }
       required:
         [id, createdBy, businessId, businessName, businessAddress,
          businessLocation, destinationAddress, destinationLocation,
-         item, status, createdAt]
+         item, status, createdAt, payment]
 
     DeliveryCreate:
       type: object
@@ -167,9 +222,11 @@ components:
         destinationAddress:  { type: string }
         destinationLocation: { $ref: '#/components/schemas/GeoPoint' }
         item:                { type: string }
+        payment:             { type: number, format: double}
+
       required:
         [businessName, businessAddress, businessLocation,
-         destinationAddress, destinationLocation, item]
+         destinationAddress, destinationLocation, item, payment]
 
     DeliveryPatch:
       type: object

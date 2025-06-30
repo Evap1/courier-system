@@ -5,6 +5,8 @@ import (
 	"github.com/Evap1/courier-system/backend/internal/db"
 	"github.com/Evap1/courier-system/backend/api"
 	"fmt"
+	"google.golang.org/api/iterator"
+
 )
 
 type UserService struct {
@@ -67,4 +69,54 @@ func (u *UserService) GetCourierInfo(ctx context.Context, uid string) (*api.Cour
 	// return object with the fields of the business
 	courier.Id = doc.Ref.ID
 	return &courier, nil
+}
+
+func (u *UserService) GetAllCouriers(ctx context.Context) ( []*api.CourierUser , error){
+	iter := u.firestore.Collection("users").Where("role", "==", "courier").Documents(ctx)
+	defer iter.Stop()
+
+	var couriers []*api.CourierUser
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		var courier api.CourierUser
+		err = doc.DataTo(&courier)
+		if err != nil {
+			continue // skip malformed document
+		}
+		courier.Id = doc.Ref.ID
+		couriers = append(couriers, &courier)
+	}
+	return couriers, nil
+}
+
+func (u *UserService) GetAllBusinesses(ctx context.Context) ([]*api.BusinessUser, error){
+	iter := u.firestore.Collection("users").Where("role", "==", "business").Documents(ctx)
+	defer iter.Stop()
+
+	var businesses []*api.BusinessUser
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		var business api.BusinessUser
+		err = doc.DataTo(&business)
+		if err != nil {
+			continue
+		}
+		business.Id = doc.Ref.ID
+		businesses = append(businesses, &business)
+	}
+	return businesses, nil
 }

@@ -81,10 +81,12 @@ type Delivery struct {
 	BusinessName        string         `firestore:"businessName"`
 	CreatedAt           *time.Time     `firestore:"createdAt,omitempty"`
 	CreatedBy           *string        `firestore:"createdBy,omitempty"`
+	DeliveredBy         *string        `firestore:"deliveredBy"`
 	DestinationAddress  string         `firestore:"destinationAddress"`
 	DestinationLocation GeoPoint       `firestore:"destinationLocation"`
 	Id                  *string        `firestore:"id,omitempty"`
 	Item                string         `firestore:"item"`
+	Payment             float64        `firestore:"payment"`
 	Status              DeliveryStatus `firestore:"status"`
 }
 
@@ -99,6 +101,7 @@ type DeliveryCreate struct {
 	DestinationAddress  string   `firestore:"destinationAddress"`
 	DestinationLocation GeoPoint `firestore:"destinationLocation"`
 	Item                string   `firestore:"item"`
+	Payment             float64  `firestore:"payment"`
 }
 
 // DeliveryPatch defines model for DeliveryPatch.
