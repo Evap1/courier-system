@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs } from "../components/tabs";
 import { OverviewTab } from "../components/admin/overviewTab";
 import { DeliveriesTab } from "../components/admin/deliveriesTab";
 import { CouriersTab } from "../components/admin/couriersTab";
 
-export const Admin = () => {
-  const [tab, setTab] = useState("Overview");
+export const Admin = () => {  
+    const [tab, setTab] = useState("Overview");
 
   return (
     <section>

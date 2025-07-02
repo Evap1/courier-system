@@ -9,6 +9,8 @@ import { getWithAuth, postWithAuth, patchWithAuth } from "../api/api";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "../firebase";
 
+import routes from "../courier_routes.json";
+
 
 // for nvigation
 import { DirectionsRenderer } from "@react-google-maps/api";
@@ -63,7 +65,7 @@ function haversine({ lat: aLat, lng: aLng }, { lat: bLat, lng: bLng }) {
 
 export const Courier = () => {
   const { user } = useAuth();  
-  //console.log(user);
+  console.log(user.uid);
   // to know the prev state even if re-rendering
   // avoiding rerendering if not needed. 
   const mapRef = useRef(null);
@@ -87,73 +89,16 @@ export const Courier = () => {
   // to allow users to pan and zoom the map freely
   const [manualPan, setManualPan] = useState(false);
 
+  const couriersMap = {"Xs2He5J4fNfGAWTBGZ8ZXNN2U952" : "courier_1",
+                       "iEBhmFIL5dPfNfMXCDdfoIuTzkw2" : "courier_2",
+                       "xsmlr7lnvJerCcXSOxWya9Mn4kH2" : "courier_3",
+                       "YbeQKvpSpTcchMvxwb0QISq1dZA2" : "courier_4",
+                       "0vnSIMXRnFRZvuy1u76ResHtk1M2" : "courier_5"
+  };
   // for testing
   const TEST_OVERRIDE = true;
-  const testCoords =  [
-    { lat: 32.618687, lng: 35.291183 },
-
-    { lat: 32.61832, lng: 35.290582 },
-    { lat: 32.618305, lng: 35.290581 },
-    { lat: 32.618579, lng: 35.289389 },
-    { lat: 32.618605, lng: 35.289347 },
-    { lat: 32.618647, lng: 35.289306 },
-    { lat: 32.618697, lng: 35.289279 },
-    { lat: 32.618723, lng: 35.289249 },
-    { lat: 32.618741, lng: 35.289212 },
-    { lat: 32.618751, lng: 35.289171 },
-    { lat: 32.618751, lng: 35.289128 },
-    { lat: 32.618741, lng: 35.289087 },
-    { lat: 32.618723, lng: 35.28905 },
-    { lat: 32.618704, lng: 35.289026 },
-    { lat: 32.618676, lng: 35.289005 },
-    { lat: 32.618645, lng: 35.288992 },
-    { lat: 32.61615, lng: 35.288888 },
-    { lat: 32.616133, lng: 35.288853 },
-    { lat: 32.616083, lng: 35.288732 },
-    { lat: 32.616008, lng: 35.288453 },
-    { lat: 32.615893, lng: 35.288025 },
-    { lat: 32.615858, lng: 35.287891 },
-    { lat: 32.615717, lng: 35.287365 },
-    { lat: 32.615692, lng: 35.287197 },
-    { lat: 32.615715, lng: 35.287035 },
-    { lat: 32.615744, lng: 35.28694 },
-    { lat: 32.615766, lng: 35.286897 },
-    { lat: 32.615774, lng: 35.286848 },
-    { lat: 32.615769, lng: 35.286804 },
-    { lat: 32.61575, lng: 35.286759 },
-    { lat: 32.615719, lng: 35.286725 },
-    { lat: 32.61568, lng: 35.286704 },
-    { lat: 32.615633, lng: 35.286643 },
-    { lat: 32.615579, lng: 35.28659 },
-    { lat: 32.615524, lng: 35.286552 },
-    { lat: 32.61428, lng: 35.285757 },
-    { lat: 32.614289, lng: 35.285729 },
-    { lat: 32.614289, lng: 35.285698 },
-    { lat: 32.61428, lng: 35.285669 },
-
-    { lat: 32.613654, lng: 35.285364 },
-    { lat: 32.613164, lng: 35.285054 },
-    { lat: 32.612966, lng: 35.284929 },
-    { lat: 32.612858, lng: 35.28486 },
-    { lat: 32.611878, lng: 35.28424 },
-    { lat: 32.611819, lng: 35.284202 },
-    { lat: 32.611777, lng: 35.284158 },
-    { lat: 32.611734, lng: 35.284099 },
-    { lat: 32.61171, lng: 35.284048 },
-    { lat: 32.611703, lng: 35.284002 },
-    { lat: 32.611702, lng: 35.283938 },
-    { lat: 32.611725, lng: 35.283896 },
-    { lat: 32.611861, lng: 35.28363 },
-    { lat: 32.611929, lng: 35.283504 },
-    { lat: 32.612051, lng: 35.28324 },
-    { lat: 32.612152, lng: 35.283016 },
-    { lat: 32.612295, lng: 35.282702 },
-    { lat: 32.612413, lng: 35.282441 },
-    { lat: 32.612525, lng: 35.282196 },
-    { lat: 32.612749, lng: 35.281703 },
-    { lat: 32.613097, lng: 35.280942 },
-    { lat: 32.61322, lng: 35.280668 }
-  ];
+  const co = couriersMap[user.uid];
+  const testCoords = routes[co];
   //const [simulatedPos, setSimulatedPos] = useState(null);
   
   const zoom = zoomForKm(radiusKm);
@@ -257,9 +202,9 @@ export const Courier = () => {
   const acceptDelivery = async (id) => {
     try {
       await postWithAuth(`http://localhost:8080/deliveries/${id}/accept`);
-      alert("Delivery accepted!");
+      //alert("Delivery accepted!");
     } catch (err) {
-      alert("Failed to accept. Maybe someone else already took it.");
+      //alert("Failed to accept. Maybe someone else already took it.");
       // throw the err to be catched by selectedDelivery to set the correct error
       throw(err)
     }
@@ -270,9 +215,9 @@ export const Courier = () => {
       await patchWithAuth(`http://localhost:8080/deliveries/${id}`, {
         status: newStatus,
       });
-      alert("Status changed to " + newStatus);
+      //alert("Status changed to " + newStatus);
     } catch (err) {
-      alert("Status change failed " + err);
+      //alert("Status change failed " + err);
     }
   };
 

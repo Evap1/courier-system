@@ -115,13 +115,15 @@ func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter)
 			dist := geoDistanceKm(
 				*filter.CenterLat, *filter.CenterLng,
 				d.BusinessLocation.Lat, d.BusinessLocation.Lng)
-			//fmt.Println(dist)
+			fmt.Println(dist)
 
 			// courier - see posted or its own active/picked_up/delivered deliveries
 			// by T/F table, choosing the rows with false assigment
 			if dist > *filter.RadiusKm{
+				//fmt.Println("Entered condition for dist")
 				if filter.Role == "courier"{
-					if (d.AssignedTo != nil && *d.AssignedTo != filter.CourierID){
+					if ((d.AssignedTo != nil && *d.AssignedTo != filter.CourierID) || d.AssignedTo == nil){
+						//fmt.Println("emtered if condition in courier role");
 						continue
 					}
 				} else { continue }

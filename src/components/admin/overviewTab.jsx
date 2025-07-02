@@ -22,45 +22,54 @@ export const OverviewTab = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const allDeliveries = await getWithAuth("http://localhost:8080/deliveries");
-      setDeliveries(allDeliveries);
-
-      const couriers = await getWithAuth("http://localhost:8080/couriers");
-      setCourierUsers(couriers);
-
-      const businesses = await getWithAuth("http://localhost:8080/businesses");
-      setBusniessUsers(businesses);
-
+        try{
+            const allDeliveries = await getWithAuth("http://localhost:8080/deliveries");
+            setDeliveries(allDeliveries);
+      
+            const couriers = await getWithAuth("http://localhost:8080/couriers");
+            setCourierUsers(couriers);
+      
+            const businesses = await getWithAuth("http://localhost:8080/businesses");
+            setBusniessUsers(businesses);
+      
+        } catch(e){
+            console.error("Failed to fetch info", e);
+        }
+      
       const days = getLast7Days();
       const stats = {};
 
-      courierUsers.forEach((courier) => {
-        stats[courier.Id] = {
-          name: courier.CourierName,
-          dailyIncome: {},
-          dailyCount: {},
-        };
-        days.forEach((day) => {
-          stats[courier.Id].dailyIncome[day] = 0;
-          stats[courier.Id].dailyCount[day] = 0;
-        });
-      });
+      if (courierUsers){
+        courierUsers.forEach((courier) => {
+            stats[courier.Id] = {
+              name: courier.CourierName,
+              dailyIncome: {},
+              dailyCount: {},
+            };
+            days.forEach((day) => {
+              stats[courier.Id].dailyIncome[day] = 0;
+              stats[courier.Id].dailyCount[day] = 0;
+            });
+          });
+      }
 
-      allDeliveries.forEach((d) => {
-        if (!d.DeliveredBy || !d.Payment || !d.CreatedAt) return;
-        const date = new Date(d.CreatedAt).toISOString().split("T")[0];
-        if (!days.includes(date)) return;
-        if (!stats[d.DeliveredBy]) return;
-
-        stats[d.DeliveredBy].dailyIncome[date] += d.Payment;
-        stats[d.DeliveredBy].dailyCount[date] += 1;
-      });
+      if (deliveries){
+        deliveries.forEach((d) => {
+            if (!d.DeliveredBy || !d.Payment || !d.CreatedAt) return;
+            const date = new Date(d.CreatedAt).toISOString().split("T")[0];
+            if (!days.includes(date)) return;
+            if (!stats[d.DeliveredBy]) return;
+    
+            stats[d.DeliveredBy].dailyIncome[date] += d.Payment;
+            stats[d.DeliveredBy].dailyCount[date] += 1;
+          });
+      }
 
       setCourierStats(stats);
     };
     fetchData();
   }, [courierUsers]);
-
+  
   const deliveryStats = deliveries.reduce((acc, d) => {
     acc[d.Status] = (acc[d.Status] || 0) + 1;
     return acc;
@@ -73,7 +82,7 @@ export const OverviewTab = () => {
     <div>
       <h3>Delivery Statistics</h3>
       <ul>
-        {Object.entries(deliveryStats).map(([status, count]) => (
+        {deliveryStats && Object.entries(deliveryStats).map(([status, count]) => (
           <li key={status}>{status}: {count}</li>
         ))}
       </ul>
