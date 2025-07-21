@@ -1,0 +1,145 @@
+/* login layout */
+.login-container {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #1a1a2e, #5c1d92);
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .login-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+  }
+  
+  .welcome-text h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .welcome-text p {
+    color: #ccc;
+    max-width: 400px;
+    line-height: 1.6;
+  }
+  
+  .login-right {
+    flex: 1;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .login-card {
+    max-width: 400px;
+    width: 100%;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    color: black;
+  }
+  
+  .login-card h2 {
+    margin-bottom: 0.25rem;
+  }
+  
+  .login-card p {
+    font-size: 0.9rem;
+    color: #444;
+    margin-bottom: 1.25rem;
+  }
+  
+  .login-card a {
+    color: #5c1d92;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  
+  .login-card form input {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+  }
+  
+  .login-card form button {
+    width: 100%;
+    background: #5c1d92;
+    color: white;
+    padding: 0.75rem;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 1.25rem;
+    transition: 0.2s;
+  }
+  
+  .login-card form button:hover {
+    background: #4e1a82;
+  }
+  
+  .forgot {
+    text-align: right;
+    margin-bottom: 1rem;
+  }
+  
+  .divider {
+    text-align: center;
+    color: #999;
+    margin: 1rem 0;
+  }
+  
+  .social-buttons {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .social-buttons button {
+    flex: 1;
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #f8f8f8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .social-buttons img {
+    width: 16px;
+  }
+  
+  .error {
+    color: red;
+    font-size: 0.8rem;
+  }
+  
+  .copyright {
+    font-size: 0.75rem;
+    color: #aaa;
+    text-align: center;
+    margin-top: 1rem;
+  }
+  
+  /* Wave SVG at the bottom */
+  .login-wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+  }
+  

@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useState, useEffect , useRef} from "react";
 import { GoogleMap, Marker, useJsApiLoader, CircleF } from "@react-google-maps/api";
 import { getWithAuth, postWithAuth, patchWithAuth } from "../api/api";
+import {Header} from "../components/header";
 
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "../firebase";
@@ -29,7 +30,7 @@ const libraries        = ["places"];          // memoised - avoids the “new ar
 
 const mapOptions = {
   streetViewControl: false,
-  fullscreenControl: true,
+  fullscreenControl: false,
   mapTypeControl: false,
 };
 
@@ -96,7 +97,7 @@ export const Courier = () => {
                        "0vnSIMXRnFRZvuy1u76ResHtk1M2" : "courier_5"
   };
   // for testing
-  const TEST_OVERRIDE = true;
+  const TEST_OVERRIDE = false;
   const co = couriersMap[user.uid];
   const testCoords = routes[co];
   //const [simulatedPos, setSimulatedPos] = useState(null);
@@ -259,6 +260,8 @@ export const Courier = () => {
   //console.log("Rendering markers for:", posted.length, "deliveries")
   return (
     <>
+
+<Header/>
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={manualPan ? undefined : pos} // if manual pan, dont recenter and move. if pressed recenter, keep moving the position
@@ -365,7 +368,8 @@ export const Courier = () => {
       })}
 
       {/* courier live navigation */}
-      {directions && <DirectionsRenderer directions={directions}  options={{ suppressMarkers: true }} />}
+      {directions && <DirectionsRenderer directions={directions}  options={{ suppressMarkers: true, draggable: true, preserveViewport: true }}
+ />}
     </GoogleMap>
     
     {/* radius slider UI */}
@@ -413,6 +417,7 @@ export const Courier = () => {
         <p><strong>Pickup:</strong> {selectedDelivery.BusinessAddress}</p>
         <p><strong>Drop-off:</strong> {selectedDelivery.DestinationAddress}</p>
         <p><strong>By:</strong> {selectedDelivery.BusinessName}</p>
+        <p><strong>Payment:</strong> {selectedDelivery.Payment} ₪</p>
 
 
         {selectedDelivery.Status === "posted" && (

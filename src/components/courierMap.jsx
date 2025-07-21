@@ -3,7 +3,7 @@ import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 
-const containerStyle = { width: "100%", height: "400px" }; // can adjust height
+const containerStyle = {width: "100%" , height:"100%"}; // can adjust height
 
 /**
  * This component renders a map showing the live position of a courier

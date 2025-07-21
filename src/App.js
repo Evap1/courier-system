@@ -10,12 +10,12 @@ import { useAuth } from "./context/AuthContext"; // for global user / userRole
 import Header from "./components/header";
 
 function App() {
-  const { loading } = useAuth();
-  if (loading) return <h2>Loading...</h2>;
+  // const { loading } = useAuth();
+  // if (loading) return <h2>Loading...</h2>;
 
   return (
     <BrowserRouter>
-      <Header /> {/* Global Sign Out button */}
+      { /* Global Sign Out button */}
       <Routes>
         <Route index path="/" element={<Login />}></Route>
         <Route

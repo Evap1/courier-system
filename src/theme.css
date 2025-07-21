@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap');
+
+/*our color theme*/
+:root {
+    --color-primary:     #4B3F72;
+    --color-accent:      #00C2A8;
+    --color-success:     #AEEA00;
+    --color-bg:          #fdf7ff;
+    --color-text-dark:   #1B1C22; 
+
+    --color-accent-hover: #00a891;
+    --color-primary-hover: #3e3363;
+
+    --color-error-bg:       #FDEAEA;
+    --color-error:          #EF4444;
+
+    /* typography */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}

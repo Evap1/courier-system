@@ -9,7 +9,6 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);          // Firebase user
   const [userRole, setUserRole] = useState(null);  // Firestore role
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -26,7 +25,6 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setUserRole(null);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -55,7 +53,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userRole, loading, refreshUserRole, signOut}}>
+    <AuthContext.Provider value={{ user, userRole, refreshUserRole, signOut}}>
       {children}
     </AuthContext.Provider>
   );

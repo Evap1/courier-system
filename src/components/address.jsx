@@ -31,14 +31,14 @@ export function AddressInput({ onSelect }) {
         onPlaceChanged={handlePlaceChanged}
         options={{
           types: ["address"],          // only real street addresses
-          componentRestrictions: { country: "il" }, // ← restrict to Israel; drop if global
+          componentRestrictions: { country: "il" }, // ← restrict to Israel;
           fields: ["formatted_address", "geometry.location", "place_id"],
         }}
       >
         <input
           type="text"
           placeholder="Fill in address"
-          className="input input-bordered w-full"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
       </Autocomplete>

@@ -3,12 +3,14 @@ import { Tabs } from "../components/tabs";
 import { OverviewTab } from "../components/admin/overviewTab";
 import { DeliveriesTab } from "../components/admin/deliveriesTab";
 import { CouriersTab } from "../components/admin/couriersTab";
-
+import {Header} from "../components/header";
 export const Admin = () => {  
     const [tab, setTab] = useState("Overview");
 
   return (
+
     <section>
+            <Header/>
       <h2>Admin Dashboard</h2>
       <Tabs
         tabs={["Overview", "Deliveries", "Couriers"]}

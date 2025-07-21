@@ -6,22 +6,37 @@ import reportWebVitals from './reportWebVitals';
 import { AuthProvider } from "./context/AuthContext"; // change to allow user and userRole to be global
 import { LoadScript } from "@react-google-maps/api";
 import { googleMapsApiKey } from "./firebase"
+import {createTheme,  MantineProvider } from '@mantine/core';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
 
+const theme = createTheme({
+  fontFamily: 'Open Sans, sans-serif',
+  primaryColor: 'cyan',
+});
+
+root.render(
+  
+  <React.StrictMode>
+    <MantineProvider
+      withGlobalStyles
+      withNormalizeCSS
+      theme={theme}
+    >
     <AuthProvider>      {/* wrap for authentication */}
     <LoadScript
     googleMapsApiKey= {googleMapsApiKey}
     libraries={["places"]}          // any future page can now use Autocomplete
-  ></LoadScript>
+    loadingElement={
+      <div className="text-center py-4 text-gray-600 text-sm">
+        Loading maps...
+      </div>
+    }
+    ></LoadScript>
       <App />
     </AuthProvider>
+    </MantineProvider>
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
