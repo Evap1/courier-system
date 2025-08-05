@@ -36,9 +36,9 @@ export const DeliveriesTab = ({
     }
   }
   return (
-    <div className={`flex flex-col lg:flex-row gap-8 w-full`}>
+    <div className={`flex flex-col xl:flex-row gap-8 w-full min-h-[calc(100vh-64px)]`}>
     {/* Header and title */}
-    <section className={visibleDelivery ? "flex-[3]" : "w-full mx-auto"}>
+<section className={`w-full ${visibleDelivery ? "xl:w-1/2" : "xl:w-full"}`}>
     <div className="items-start justify-between md:flex">
             <div className="max-w-lg">
                 <h3 className="text-gray-800 text-xl font-bold sm:text-2xl">
@@ -135,6 +135,7 @@ export const DeliveriesTab = ({
     </section>
 
     {/* Map view */}
+    {/*
     {visibleDelivery && (
     <section className="flex flex-col flex-[2] min-w-[350px] max-w-full mt-8 lg:mt-0">
           <h3 className="text-lg font-bold mb-2">
@@ -146,6 +147,19 @@ export const DeliveriesTab = ({
           </div>
         </section>
     )}
+    */}
+    {visibleDelivery && (
+      <section className="w-full xl:w-1/2">
+      <h3 className="text-lg font-bold mb-2">
+      Tracking Courier for Delivery{" "}
+      <span className="text-blue-700">{visibleDelivery.item}</span>
+    </h3>
+    <div className="w-full h-[500px] xl:h-full rounded shadow overflow-hidden bg-gray-50">
+    <CourierMap courierId={visibleDelivery.assignedTo} />
+    </div>
+  </section>
+)}
+
     </div>
   )
 };

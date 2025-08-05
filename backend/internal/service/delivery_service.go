@@ -256,6 +256,20 @@ func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, deliveryID s
 		if newStatus == StatusDelivered { 
 			d.AssignedTo = nil;
 			d.DeliveredBy = &courierUID;
+
+			// update the courier’s balance
+			courierDoc := s.firestore.Collection("users").Doc(courierUID)
+			courierSnap, err := tx.Get(courierDoc)
+			if err != nil { return err }
+
+			var courier api.CourierUser
+			err = courierSnap.DataTo(&courier)
+			if err != nil { return err }
+
+			newBalance := courier.Balance + d.Payment
+
+			err = tx.Update(courierDoc, []firestore.Update{{Path: "balance", Value: newBalance},})
+			if err != nil { return err }
 		}
 		snap = innerSnap
 		// commit changes to DB

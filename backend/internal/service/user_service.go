@@ -58,7 +58,7 @@ func (u *UserService) GetCourierInfo(ctx context.Context, uid string) (*api.Cour
 	}
 	var courier api.CourierUser
 
-	// convert firestore fields to type api.BusinessUserRole
+	// convert firestore fields to type api.CusinessUserRole
 	err = doc.DataTo(&courier)
 	if err != nil { return nil, err }
 

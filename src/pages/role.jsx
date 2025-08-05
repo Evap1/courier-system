@@ -48,7 +48,7 @@ export const Role = () => {
                 businessAddress: addressObj.formatted,
                 placeId: addressObj.placeId,
                 location: addressObj.location, //lat/lng
-               } : {courierName: name})
+               } : {courierName: name, Balance: 0})
             }, { merge: true });
 
 

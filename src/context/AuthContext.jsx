@@ -9,10 +9,11 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);          // Firebase user
   const [userRole, setUserRole] = useState(null);  // Firestore role
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("user:", firebaseUser); // ← ADD THIS
+      console.log("user:", firebaseUser);
 
       if (firebaseUser) {
         setUser(firebaseUser);
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setUserRole(null);
       }
+      setLoading(false);  // <-- this is when loading ends
     });
 
     return () => unsubscribe();
@@ -53,7 +55,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userRole, refreshUserRole, signOut}}>
+    <AuthContext.Provider value={{ user, userRole, loading, refreshUserRole, signOut}}>
       {children}
     </AuthContext.Provider>
   );

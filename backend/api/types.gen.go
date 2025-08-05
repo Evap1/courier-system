@@ -67,6 +67,7 @@ type CourierUser struct {
 	Email       string          `firestore:"email"`
 	Id          string          `firestore:"id"`
 	Role        CourierUserRole `firestore:"role"`
+	Balance     float64         `firestore:"balance"`
 }
 
 // CourierUserRole defines model for CourierUser.Role.

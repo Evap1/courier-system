@@ -3,6 +3,7 @@ import { postWithAuth } from "../../api/api";
 import { AddressInput } from "../address";
 import { useAuth } from "../../context/AuthContext";
 import { getWithAuth } from "../../api/api";
+import ConfettiBurst from "../../components/confettiButton";
 
 
 export const NewDeliveryTab = ({ businessData,  open, onClose }) => {
@@ -55,7 +56,7 @@ export const NewDeliveryTab = ({ businessData,  open, onClose }) => {
             setTimeout(() => {
                 setSuccess(null);
                 onClose();
-            }, 1500);
+            }, 3500);
             } catch (err) {
             console.error("Error creating delivery:", err);
             setError("Failed to create delivery");
@@ -76,6 +77,7 @@ export const NewDeliveryTab = ({ businessData,  open, onClose }) => {
                             </h3>
                         </div>
                     </div>
+                <ConfettiBurst show={success} duration={3000} />
                 <form className="space-y-4 max-w-md">
                     <div>
                     <label className="block mb-1 font-medium">Item:</label>

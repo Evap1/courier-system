@@ -13,7 +13,10 @@ import CourierMap from "../components/courierMap";
 import { useNavigate } from "react-router-dom";
 
 import { DeliveriesTab } from "../components/shared/deliveriesTab";
+import { ProfileTab } from "../components/shared/profileTab";
+
 import { NewDeliveryTab }from "../components/business/newDeliveryTab";
+import { OverViewTab }from "../components/business/overviewTab";
 
 
 export const Business = () => {
@@ -110,12 +113,6 @@ return(
                             <img src="https://randomuser.me/api/portraits/women/79.jpg" className="w-12 h-12 rounded-full" />
                             <div>
                                 <span className="block text-gray-700 text-sm font-semibold">{businessData.BusinessName}</span>
-                                <a
-                                    href="javascript:void(0)"
-                                    className="block mt-px text-gray-600 hover:text-indigo-600 text-xs"
-                                >
-                                    View profile
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -132,6 +129,14 @@ return(
         visibleDelivery={visibleDelivery}
         setVisibleDelivery={setVisibleDelivery}
         />}
+      {tab === "profile" && <ProfileTab
+        businessData={businessData} // state from Firestore snapshot
+        userRole={"business"}
+      />}
+      {tab === "overview" && <OverViewTab
+        businessData={businessData} // state from Firestore snapshot
+        userRole={"business"}
+      />}
       {showModal && <NewDeliveryTab
           businessData={businessData}
           open={showModal}

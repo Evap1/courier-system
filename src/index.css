@@ -18,3 +18,17 @@ code {
 body {
   font-family: var(--font-sans);
 }
+
+.sticky-nav {
+  animation: sticky-nav 300ms ease-out;
+}
+@keyframes sticky-nav {
+  0% {
+    transform: translateY(-6em);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
