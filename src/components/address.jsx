@@ -1,4 +1,3 @@
-// components/AddressInput.jsx
 import { useRef, useState } from "react";
 import { Autocomplete } from "@react-google-maps/api";
 
@@ -6,7 +5,7 @@ export function AddressInput({ onSelect }) {
   const acRef = useRef(null);
   const [error, setError] = useState("");
 
-  /** Called when the user picks a suggestion */
+  /** called when the user picks a suggestion */
   const handlePlaceChanged = () => {
     const place = acRef.current.getPlace();
     if (!place.geometry) {
@@ -31,7 +30,7 @@ export function AddressInput({ onSelect }) {
         onPlaceChanged={handlePlaceChanged}
         options={{
           types: ["address"],          // only real street addresses
-          componentRestrictions: { country: "il" }, // ← restrict to Israel;
+          componentRestrictions: { country: "il" }, // restricted to Israel;
           fields: ["formatted_address", "geometry.location", "place_id"],
         }}
       >

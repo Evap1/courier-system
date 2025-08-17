@@ -7,7 +7,6 @@ import { Admin } from "./pages/admin";
 import { Courier } from "./pages/courier";
 import { Business } from "./pages/business";
 import { useAuth } from "./context/AuthContext"; // for global user / userRole
-import Header from "./components/header";
 import './theme.css'; 
 function App() {
   const { loading } = useAuth();

@@ -19,10 +19,6 @@ export const Role = () => {
     const [selectedRole, setSelectedRole] = useState("");
     const [error, setError] = useState(null);
 
-    const handleChange = (e) => {
-        setSelectedRole(e.target.value);
-      };
-
     // we want to try to update the data in firebase
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -48,7 +44,7 @@ export const Role = () => {
                 businessAddress: addressObj.formatted,
                 placeId: addressObj.placeId,
                 location: addressObj.location, //lat/lng
-               } : {courierName: name, Balance: 0})
+               } : {courierName: name, balance: 0})
             }, { merge: true });
 
 
@@ -67,66 +63,6 @@ export const Role = () => {
       { key: "business", label: "Business", icon: "🏢" }
     ];
 
-    
-//     return (
-//         <section>
-
-//           <form onSubmit={handleSubmit}>
-//             <label>
-//             Select Your Role:
-//             <br/>
-
-//               <input
-//                 type="radio"
-//                 value="courier"
-//                 checked={selectedRole === "courier"}
-//                 onChange={handleChange}
-//               />
-//               Courier
-//             </label>
-//             <br />
-//             <label>
-//               <input
-//                 type="radio"
-//                 value="business"
-//                 checked={selectedRole === "business"}
-//                 onChange={handleChange}
-//               />
-//               Business
-//             </label>
-//             <br />
-//             {selectedRole === "business" && (
-//               <AddressInput onSelect={setAddressObj} />
-//                 // <label>
-//                 //     Business Address:
-//                 //     <input
-//                 //     value={businessAddress}
-//                 //     onChange={(e) => setBusinessAddress(e.target.value)}
-//                 //     required
-//                 //     />
-//                 // </label>
-//             )}
-//             <br />
-//             <label>
-//             {selectedRole === "business"
-//                 ? "Business name:"
-//                 : selectedRole === "courier"
-//                 ? "Enter courier name:"
-//                 : "Name:"}
-//             <input
-//                 value={name}
-//                 onChange={(e) => setName(e.target.value)}
-//                 required
-//             />
-//             </label>
-//             <br />
-
-//             <button type="submit">Continue</button>
-//             {error && <p style={{ color: "red" }}>{error}</p>}
-//           </form>
-//         </section>
-//       );
-// };
 return (
   <main className="min-h-screen flex items-center justify-center bg-blue-50 p-4">
     {/* FIRST VIEW- SELECT ROLE */}

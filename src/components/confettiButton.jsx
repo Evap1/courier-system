@@ -5,13 +5,12 @@ export default function ConfettiBurst({ show, duration = 3000, onDone }) {
   useEffect(() => {
     if (!show) return;
 
-    // We'll fire confetti from random positions for the given duration
     const animationEnd = Date.now() + duration;
     const defaults = {
       startVelocity: 30,
       spread: 360,
       ticks: 90,
-      zIndex: 99999, // Make sure it's on top of all UI
+      zIndex: 99999,
       particleCount: 80,
       origin: { y: 0.7 }
     };
@@ -40,5 +39,5 @@ export default function ConfettiBurst({ show, duration = 3000, onDone }) {
     return () => clearInterval(interval);
   }, [show, duration, onDone]);
 
-  return null; // The confetti renders to a canvas in the document body
+  return null;
 }

@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker} from "@react-google-maps/api";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 
 const containerStyle = {width: "100%" , height:"100%"}; // can adjust height
-const libraries = ["places"];
 /**
  * This component renders a map showing the live position of a courier
  * in real time, using Firestore onSnapshot to subscribe to updates.
@@ -14,10 +13,6 @@ const CourierMap = ({ courierId }) => {
   const [animatedPos, setAnimatedPos] = useState(null);
   const prevPos = useRef(null);
 
-  // const { isLoaded } = useJsApiLoader({
-  //   googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-  //   libraries,
-  // });
   const isLoaded = true;
   // listen to Firestore location updates
   useEffect(() => {

@@ -1,18 +1,115 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { postWithAuth } from "../../api/api";
 import { AddressInput } from "../address";
-import { useAuth } from "../../context/AuthContext";
-import { getWithAuth } from "../../api/api";
 import ConfettiBurst from "../../components/confettiButton";
 
 
+/** ---------- Helpers ---------- **/
+// below helpers support built in payment- without any option to modify it from business user.
+
+// distance in KM
+function haversineKm(lat1, lon1, lat2, lon2) {
+    const toRad = (v) => (v * Math.PI) / 180;
+    const R = 6371; // Earth radius (km)
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+  
+// Simple time-based multiplier (tweak to your needs / market)
+function getTimeMultiplier(now = new Date()) {
+    const h = now.getHours();       // 0..23
+    const day = now.getDay();       // sunday = 0 .. saturday = 6
+
+    let mult = 1.0;
+
+    // rush hours
+    if ((h >= 11 && h < 15) || (h >= 18 && h < 20)) {
+        mult *= 1.25; // +25% at rush
+    }
+
+    // night
+    if (h >= 22 || h < 5) {
+        mult *= 1.15; // +15% at night
+    }
+
+    // weekend
+    if (day === 5 || day === 6) {
+        mult *= 1.10; // +10% weekend
+    }
+
+    return mult;
+}
+
+// pricing model
+function calculatePrice(distanceKm, when = new Date()) {
+    if (!isFinite(distanceKm) || distanceKm <= 0) return 0;
+
+    const BASE_FEE = 10;           // pickup + handling
+    const PER_KM = 3.2;            // up to 15 km
+    const PER_KM_LONG = 2.6;       // > 15 km discounted
+    const MIN_FARE = 15;
+
+    const first = Math.min(distanceKm, 15) * PER_KM;
+    const rest = Math.max(distanceKm - 15, 0) * PER_KM_LONG;
+
+    const raw = BASE_FEE + first + rest;
+    const surge = raw * getTimeMultiplier(when);
+
+    // Round to 0.5 NIS steps
+    const rounded = Math.round((surge * 2)) / 2;
+
+    return Math.max(rounded, MIN_FARE);
+}
+
+
 export const NewDeliveryTab = ({ businessData,  open, onClose }) => {
-    const { user } = useAuth();
     const [item, setItem] = useState("");
-    const [destination, setDestination] = useState("");
+    const [destination, setDestination] = useState(null);
     const [payment, setPayment] = useState(0);
+    const [distanceKm, setDistanceKm] = useState(0);
+
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    console.log(businessData)
+    // Recompute distance & price when destination changes
+    useEffect(() => {
+        try {
+        setError(null);
+
+        if (!destination) {
+            console.log("fell at dest")
+            setDistanceKm(0);
+            setPayment(0);
+            return;
+        }
+        const bLoc = businessData?.Location
+        const dLoc = destination?.location;
+
+        // avoid NaNs
+        if (!bLoc ||!dLoc) {
+            console.log("fell at if")
+            setDistanceKm(0);
+            setPayment(0);
+            return;
+        }
+
+        const km = haversineKm(bLoc.Lat, bLoc.Lng, dLoc.lat, dLoc.lng);
+        setDistanceKm(km);
+
+        const price = calculatePrice(km, new Date());
+        setPayment(price);
+        } catch (e) {
+        console.error(e);
+        setError("Failed to compute price.");
+        setDistanceKm(0);
+        setPayment(0);
+        }
+    }, [destination, businessData]);
 
     if (!open) return null;
 
@@ -34,7 +131,7 @@ export const NewDeliveryTab = ({ businessData,  open, onClose }) => {
             const body = {
               BusinessName: businessData.BusinessName,
               BusinessAddress: businessData.BusinessAddress,
-              BusinessLocation: businessData.BusinessLocation,
+              BusinessLocation: businessData.Location,
               DestinationAddress: destination.formatted,
               DestinationLocation: {
                 Lat: destination.location.lat,
@@ -47,11 +144,11 @@ export const NewDeliveryTab = ({ businessData,  open, onClose }) => {
         
             // reset the fields
             setItem("");
-            setDestination("");
+            setDestination(null);
             setError(null);
             setPayment(0);
 
-            // ✅ Show success + auto-close modal after 1.5s
+            // success + auto-close modal after 1.5s
             setSuccess("Delivery created successfully!");
             setTimeout(() => {
                 setSuccess(null);
@@ -62,6 +159,7 @@ export const NewDeliveryTab = ({ businessData,  open, onClose }) => {
             setError("Failed to create delivery");
             }
     };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/40">
             <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6 relative">
@@ -89,17 +187,22 @@ export const NewDeliveryTab = ({ businessData,  open, onClose }) => {
                     />
                     </div>
                     <div>
-                    <label className="block mb-1 font-medium">Payment:</label>
-                    <input
-                        value={payment}
-                        onChange={(e) => setPayment(e.target.value)}
-                        required
-                        className="w-full border px-3 py-2"
-                    />
-                    </div>
-                    <div>
                     <label className="block mb-1 font-medium">Destination:</label>
                         <AddressInput onSelect={setDestination} />
+                        <p className="text-xs text-gray-500 mt-1">
+                            {distanceKm > 0 ? `Distance ≈ ${distanceKm.toFixed(1)} km` : ""}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block mb-1 font-medium">Estimated price (auto):</label>
+                        <input
+                            value={destination ? `₪${payment.toFixed(2)}` : ""}
+                            readOnly
+                            className="w-full border px-3 py-2 rounded bg-gray-100 text-gray-700"
+                            placeholder="Select a destination to compute"
+                            tabIndex={-1}
+                        />
                     </div>
                     <button
                         onClick={handleNewDelivery}

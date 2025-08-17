@@ -1,9 +1,6 @@
-// for later
 import { useAuth } from "../context/AuthContext";
-
-// pages/courier.jsx - for now
 import { useState, useEffect , useRef} from "react";
-import { GoogleMap, Marker, useJsApiLoader, CircleF } from "@react-google-maps/api";
+import { GoogleMap, Marker, CircleF } from "@react-google-maps/api";
 import { getWithAuth, postWithAuth, patchWithAuth } from "../api/api";
 import {Header} from "../components/header";
 
@@ -24,14 +21,6 @@ import {RotatingMarker} from "../components/courier/rotatingMarker"
 
 
 const containerStyle = { width: "100%", height: "100vh" };
-
-const markerIconPosted    = "/new_delivery.png";
-const markerIconAccepted  = "/pickup.png";
-const markerIconDestination  = "/dst.png";
-
-
-const libraries        = ["places"];  
-
 
 const mapOptions = {
   styles: mapStyle,
@@ -145,7 +134,7 @@ export const Courier = () => {
   const [name, setName] = useState("");
 
 
-  const couriersMap = {"QpMsl9n2zTW42vvKVcpwFObRwmQ2" : "courier_1",
+  const couriersMap = {"X7xJOZFonzPpS7pKLTuHBrrT7PK2" : "courier_1",
                        "iEBhmFIL5dPfNfMXCDdfoIuTzkw2" : "courier_2",
                        "xsmlr7lnvJerCcXSOxWya9Mn4kH2" : "courier_3",
                        "YbeQKvpSpTcchMvxwb0QISq1dZA2" : "courier_4",
@@ -158,13 +147,6 @@ export const Courier = () => {
   //const [simulatedPos, setSimulatedPos] = useState(null);
   
   const zoom = zoomForKm(radiusKm);
-
-  /** Load the Google Maps SDK */
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
-
 
   // to fetch the balance and refetch wheb delivered
   const fetchBalance = async () => {
@@ -443,9 +425,8 @@ export const Courier = () => {
   }
 
   /* Handle the three loading/error states cleanly */
-  if (loadError)       return <p style={{ color: "red" }}>{loadError}</p>;
   if (geoError)        return <p style={{ color: "red" }}>{geoError}</p>;
-  if (!isLoaded || !pos) return <p>Loading map…</p>;
+  if (!pos) return <p>Loading map…</p>;
 
   //console.log("Rendering markers for:", posted.length, "deliveries")
   return (

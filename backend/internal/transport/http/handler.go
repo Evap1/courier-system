@@ -251,9 +251,16 @@ func (h *Handler) GetMe(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusOK, OneOfUserFromCourier(info))
+	} else if role == "admin"{ 
+		info := map[string]string{
+			"AdminName": "Admin",
+			"Email":     "@gmail.com",
+			"Role":      "Admin",
+		}
+		c.JSON(http.StatusOK, info)
 	} else {
 		c.JSON(http.StatusBadRequest, errBody(errors.New("unsupported role")))
-
+		
 	}
 }
 

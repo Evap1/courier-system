@@ -17,12 +17,7 @@ const CourierLiveTracker = ({ destination }) => {
   const [directions, setDirections] = useState(null);
   const mapRef = useRef(null);
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
-
-  // Track courier location
+  // track courier location
   useEffect(() => {
     if (!navigator.geolocation) return;
 
@@ -48,7 +43,7 @@ const CourierLiveTracker = ({ destination }) => {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [user?.uid]);
 
-  // Get directions from pos → destination
+  // get directions from pos to destination
   useEffect(() => {
     if (!pos || !destination || !window.google) return;
 
@@ -74,7 +69,7 @@ const CourierLiveTracker = ({ destination }) => {
     );
   }, [pos, destination]);
 
-  if (!isLoaded || !pos) return <p>Loading courier map…</p>;
+  if (!pos) return <p>Loading courier map…</p>;
 
   return (
     <GoogleMap

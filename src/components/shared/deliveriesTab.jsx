@@ -37,47 +37,47 @@ export const DeliveriesTab = ({
   }
   return (
     <div className={`flex flex-col xl:flex-row gap-8 w-full min-h-[calc(100vh-64px)]`}>
-    {/* Header and title */}
-<section className={`w-full ${visibleDelivery ? "xl:w-1/2" : "xl:w-full"}`}>
-    <div className="items-start justify-between md:flex">
-            <div className="max-w-lg">
-                <h3 className="text-gray-800 text-xl font-bold sm:text-2xl">
-                    All Deliveries
-                </h3>
-                <p className="text-gray-600 mt-2">
-                    View and manage all your delivery requests in one place.
-                </p>
-            </div>
+      {/* header and title */}
+      <section className={`w-full ${visibleDelivery ? "xl:w-1/2" : "xl:w-full"}`}>
+          <div className="items-start justify-between md:flex">
+                  <div className="max-w-lg">
+                      <h3 className="text-gray-800 text-xl font-bold sm:text-2xl">
+                          All Deliveries
+                      </h3>
+                      <p className="text-gray-600 mt-2">
+                          View and manage all your delivery requests in one place.
+                      </p>
+                  </div>
+              </div>
+      <br></br>
+        {/* filters */}
+        <div className="flex flex-wrap gap-4 mb-4">
+          <input
+            placeholder="Search by item"
+            className="border px-2 py-1"
+            value={filterItem}
+            onChange={(e) => setFilterItem(e.target.value)}
+          />
+          {isAdmin && <input
+            placeholder="Search by business"
+            className="border px-2 py-1"
+            value={filterBusiness}
+            onChange={(e) => setFilterBusiness(e.target.value)}
+          /> }
+          <select
+            className="border px-2 py-1"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="">All statuses</option>
+            <option value="posted">Posted</option>
+            <option value="accepted">Accepted</option>
+            <option value="picked_up">Picked Up</option>
+            <option value="delivered">Delivered</option>
+          </select>
         </div>
-<br></br>
-    {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-4">
-        <input
-          placeholder="Search by item"
-          className="border px-2 py-1"
-          value={filterItem}
-          onChange={(e) => setFilterItem(e.target.value)}
-        />
-        {isAdmin && <input
-          placeholder="Search by business"
-          className="border px-2 py-1"
-          value={filterBusiness}
-          onChange={(e) => setFilterBusiness(e.target.value)}
-        /> }
-        <select
-          className="border px-2 py-1"
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="">All statuses</option>
-          <option value="posted">Posted</option>
-          <option value="accepted">Accepted</option>
-          <option value="picked_up">Picked Up</option>
-          <option value="delivered">Delivered</option>
-        </select>
-      </div>
 
-    {/* Table */}
+        {/* Table */}
         <div className="overflow-x-auto rounded shadow bg-white">
             <table className="min-w-max w-full text-sm text-left">
                 <thead className="text-gray-600 font-medium border-b">
@@ -134,34 +134,19 @@ export const DeliveriesTab = ({
         </div>
     </section>
 
-    {/* Map view */}
-    {/*
-    {visibleDelivery && (
-    <section className="flex flex-col flex-[2] min-w-[350px] max-w-full mt-8 lg:mt-0">
-          <h3 className="text-lg font-bold mb-2">
-            Tracking Courier for Delivery{" "}
-            <span className="text-blue-700">{visibleDelivery.item}</span>
-          </h3>
-          <div className="flex-1 min-h-[350px] h-[350px] rounded shadow overflow-hidden bg-gray-50">
-            <CourierMap courierId={visibleDelivery.assignedTo} />
-          </div>
-        </section>
-    )}
-    */}
     {visibleDelivery && (
       <section className="w-full xl:w-1/2">
-      <h3 className="text-lg font-bold mb-2">
-      Tracking Courier for Delivery{" "}
-      <span className="text-blue-700">{visibleDelivery.item}</span>
-    </h3>
-    <div className="w-full h-[500px] xl:h-full rounded shadow overflow-hidden bg-gray-50">
-    <CourierMap courierId={visibleDelivery.assignedTo} />
-    </div>
-  </section>
-)}
-
-    </div>
-  )
+        <h3 className="text-lg font-bold mb-2">
+          Tracking Courier for Delivery{" "}
+          <span className="text-blue-700">{visibleDelivery.item}</span>
+        </h3>
+        <div className="w-full h-[500px] xl:h-full rounded shadow overflow-hidden bg-gray-50">
+          <CourierMap courierId={visibleDelivery.assignedTo} />
+        </div>
+      </section>
+    )}
+  </div>
+)
 };
 
 export default DeliveriesTab;
