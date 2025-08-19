@@ -20,6 +20,8 @@ import mapStyle from "../components/mapStyle.json";
 import {DeliveryCard} from "../components/courier/deliveryCard"
 // import {RotatingMarker} from "../components/courier/rotatingMarker"
 
+import { AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 
 const containerStyle = { width: "100%", height: "100vh" };
 
@@ -259,6 +261,12 @@ export const Courier = () => {
     return () => clearTimeout(timeoutRef.current); // cleanup on unmount
   }, []);
 
+  useEffect(() => {
+    if (feedback === "success") {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+  }, [feedback]);
+
   const acceptDelivery = async (id) => {
     try {
       await postWithAuth(`http://localhost:8080/deliveries/${id}/accept`);
@@ -412,6 +420,7 @@ export const Courier = () => {
       setSelectedDelivery(null);
       setNavigatingAddress(null);  //  stop navigation
       setDirections(null);
+      confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 } });
     } catch (err) {
       setSelectedDelivery(null);
       setNavigatingAddress(null); //  stop navigation ?
@@ -596,18 +605,21 @@ export const Courier = () => {
       </GoogleMap>
     </div>
 
-    {selectedDelivery && (
-      <DeliveryCard
-        delivery={selectedDelivery}
-        etaToBusiness={etaToBusiness}
-        etaToDest={etaToDest}
-        onClose={() => setSelectedDelivery(null)}
-        onAccept={handleAccept}
-        onPickedUp={handlePickUp}
-        onDelivered={handleDelivered}
-        onNavigate={handleNavigate}
-      />
-    )}
+    <AnimatePresence mode="wait">
+      {selectedDelivery && (
+        <DeliveryCard
+          delivery={selectedDelivery}
+          etaToBusiness={etaToBusiness}
+          etaToDest={etaToDest}
+          onClose={() => setSelectedDelivery(null)}
+          onAccept={handleAccept}
+          onPickedUp={handlePickUp}
+          onDelivered={handleDelivered}
+          onNavigate={handleNavigate}
+        />
+      )}
+    </AnimatePresence>
+
 
     {feedback && (
       <div
