@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { GoogleMap, Marker} from "@react-google-maps/api";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
+import { Loader } from "./loader";
 
 const containerStyle = {width: "100%" , height:"100%"}; // can adjust height
 /**
@@ -60,9 +61,12 @@ const CourierMap = ({ courierId }) => {
     return () => clearInterval(interval);
   }, [courierPos]);
 
-  if (!animatedPos) return <p>Loading map...</p>;
-
   return (
+    <>
+    {(!animatedPos) ? (
+      <Loader />
+    ) : (
+      <>
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={animatedPos}
@@ -70,6 +74,9 @@ const CourierMap = ({ courierId }) => {
     >
       <Marker position={animatedPos} />
     </GoogleMap>
+    </>
+    )}
+    </>
   );
 };
 

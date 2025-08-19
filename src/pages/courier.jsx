@@ -3,6 +3,7 @@ import { useState, useEffect , useRef} from "react";
 import { GoogleMap, Marker, CircleF } from "@react-google-maps/api";
 import { getWithAuth, postWithAuth, patchWithAuth } from "../api/api";
 import {Header} from "../components/header";
+import {Loader} from "../components/loader";
 
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "../firebase";
@@ -17,7 +18,7 @@ import * as Slider from "@radix-ui/react-slider";
 import mapStyle from "../components/mapStyle.json"; 
 
 import {DeliveryCard} from "../components/courier/deliveryCard"
-import {RotatingMarker} from "../components/courier/rotatingMarker"
+// import {RotatingMarker} from "../components/courier/rotatingMarker"
 
 
 const containerStyle = { width: "100%", height: "100vh" };
@@ -40,17 +41,17 @@ function haversine({ lat: aLat, lng: aLng }, { lat: bLat, lng: bLng }) {
 }
 
 // returns the angle in degrees between two coordinates
-function getHeading(from, to) {
-  const lat1 = (from.lat * Math.PI) / 180;
-  const lat2 = (to.lat * Math.PI) / 180;
-  const dLng = ((to.lng - from.lng) * Math.PI) / 180;
+// function getHeading(from, to) {
+//   const lat1 = (from.lat * Math.PI) / 180;
+//   const lat2 = (to.lat * Math.PI) / 180;
+//   const dLng = ((to.lng - from.lng) * Math.PI) / 180;
 
-  const y = Math.sin(dLng) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-  const bearing = Math.atan2(y, x);
+//   const y = Math.sin(dLng) * Math.cos(lat2);
+//   const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+//   const bearing = Math.atan2(y, x);
 
-  return (bearing * 180) / Math.PI; // radians to degrees
-}
+//   return (bearing * 180) / Math.PI; // radians to degrees
+// }
 
 function kmForZoom(z) {
   const table = { 15: 1, 14: 2, 13: 5, 12: 10, 11: 20, 10: 40, 9: 80, 8: 160, 7: 320 };
@@ -191,7 +192,7 @@ export const Courier = () => {
     }, 3000);
   
     return () => clearInterval(interval);
-  }, [user, TEST_OVERRIDE]);
+  }, [user, TEST_OVERRIDE, testCoords]);
 
   /** Start watching the device’s location as soon as the component mounts */
   useEffect(() => {
@@ -424,18 +425,14 @@ export const Courier = () => {
     setSelectedDelivery(null);
   }
 
-  /* Handle the three loading/error states cleanly */
+  /* handle the three error states cleanly */
   if (geoError)        return <p style={{ color: "red" }}>{geoError}</p>;
-  if (!pos) return <p>Loading map…</p>;
 
-  //console.log("Rendering markers for:", posted.length, "deliveries")
   return (
     <>
-      <Header
-        balance={balance}
-        name = {name}
-      />
-
+    {(!pos) ? (<Loader/>) : (
+      <>
+      <Header balance={balance} name = {name}  />
       <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-full px-4 z-40">
         <div className="max-w-sm mx-auto backdrop-blur-md bg-white/10 shadow-lg rounded-xl py-3 flex flex-col items-center border border-gray-200">
           <span className="text-xl font-medium text-primary mb-1">
@@ -472,64 +469,58 @@ export const Courier = () => {
       >
       
       {/* Recenter Button */}
-<div className="absolute bottom-20 left-6 z-50">
-  <button
-    onClick={() => {
-      if (mapRef.current && pos) {
-        mapRef.current.panTo(pos);
-        setManualPan(false);
-      }
-    }}
-    className="p-3 rounded-full bg-white shadow-md hover:bg-gray-100 border border-primary transition"
-    aria-label="Recenter map"
-  >
-    {/* Inline custom SVG icon */}
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 512 512"
-      className="w-12 h-12 text-primary"
-      fill="currentColor"
-    >
-      <g transform="translate(0,512) scale(0.1,-0.1)">
-        <path d="M2450 4640 l0 -480 110 0 110 0 0 480 0 480 -110 0 -110 0 0 -480z"/>
-        <path d="M1845 4681 c-673 -231 -1186 -746 -1410 -1418 -20 -58 -34 -111 -32
-        -117 4 -11 196 -63 200 -55 1 2 20 57 41 121 123 374 377 726 697 965 208
-        155 390 245 685 338 17 5 -37 199 -56 202 -8 1 -64 -15 -125 -36z"/>
-        <path d="M3137 4713 c-8 -14 -50 -194 -46 -196 2 -1 57 -20 121 -41 585 -193
-        1068 -675 1263 -1261 20 -60 39 -115 40 -122 3 -8 31 -4 97 14 51 14 97 29
-        102 33 5 5 -7 56 -28 119 -221 673 -746 1200 -1421 1426 -112 37 -121 39
-        -128 28z"/>
-        <path d="M2359 3714 c-246 -44 -445 -149 -625 -328 -228 -229 -344 -507 -344
-        -826 0 -319 116 -597 344 -826 229 -228 507 -344 826 -344 319 0 597 116 826
-        344 228 229 344 507 344 826 0 319 -116 597 -344 826 -183 182 -381 285 -633
-        329 -105 18 -291 18 -394 -1z m384 -215 c193 -39 354 -125 493 -263 138 -139
-        224 -300 263 -493 27 -128 27 -238 0 -366 -39 -193 -125 -354 -263 -493 -139
-        -138 -300 -224 -493 -263 -128 -27 -238 -27 -366 0 -193 39 -354 125 -493 263
-        -138 139 -224 300 -263 493 -27 128 -27 238 0 366 39 193 125 354 263 493 230
-        229 548 327 859 263z"/>
-        <path d="M0 2560 l0 -110 480 0 480 0 0 110 0 110 -480 0 -480 0 0 -110z"/>
-        <path d="M4160 2560 l0 -110 480 0 480 0 0 110 0 110 -480 0 -480 0 0 -110z"/>
-        <path d="M498 2011 c-59 -16 -98 -31 -98 -39 0 -7 18 -67 41 -135 176 -527
-        567 -986 1069 -1255 174 -93 455 -196 470 -173 9 15 54 191 49 194 -2 1 -57
-        20 -121 41 -588 194 -1068 674 -1267 1269 -21 65 -41 120 -43 121 -1 1 -47 -9
-        -100 -23z"/>
-        <path d="M4477 1912 c-189 -585 -674 -1071 -1270 -1270 -65 -22 -118 -43 -119
-        -46 -4 -22 48 -196 59 -196 7 0 61 16 120 36 638 213 1147 702 1387 1331 46
-        120 69 204 59 213 -8 7 -174 50 -190 50 -4 0 -25 -53 -46 -118z"/>
-        <path d="M2450 480 l0 -480 110 0 110 0 0 480 0 480 -110 0 -110 0 0 -480z"/>
-      </g>
-    </svg>
-  </button>
-</div>
+      <div className="absolute bottom-20 left-6 z-50">
+        <button
+          onClick={() => {
+            if (mapRef.current && pos) {
+              mapRef.current.panTo(pos);
+              setManualPan(false);
+            }
+          }}
+          className="p-3 rounded-full bg-white shadow-md hover:bg-gray-100 border border-primary transition"
+          aria-label="Recenter map"
+        >
+          {/* Inline custom SVG icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 512 512"
+            className="w-12 h-12 text-primary"
+            fill="currentColor"
+          >
+            <g transform="translate(0,512) scale(0.1,-0.1)">
+              <path d="M2450 4640 l0 -480 110 0 110 0 0 480 0 480 -110 0 -110 0 0 -480z"/>
+              <path d="M1845 4681 c-673 -231 -1186 -746 -1410 -1418 -20 -58 -34 -111 -32
+              -117 4 -11 196 -63 200 -55 1 2 20 57 41 121 123 374 377 726 697 965 208
+              155 390 245 685 338 17 5 -37 199 -56 202 -8 1 -64 -15 -125 -36z"/>
+              <path d="M3137 4713 c-8 -14 -50 -194 -46 -196 2 -1 57 -20 121 -41 585 -193
+              1068 -675 1263 -1261 20 -60 39 -115 40 -122 3 -8 31 -4 97 14 51 14 97 29
+              102 33 5 5 -7 56 -28 119 -221 673 -746 1200 -1421 1426 -112 37 -121 39
+              -128 28z"/>
+              <path d="M2359 3714 c-246 -44 -445 -149 -625 -328 -228 -229 -344 -507 -344
+              -826 0 -319 116 -597 344 -826 229 -228 507 -344 826 -344 319 0 597 116 826
+              344 228 229 344 507 344 826 0 319 -116 597 -344 826 -183 182 -381 285 -633
+              329 -105 18 -291 18 -394 -1z m384 -215 c193 -39 354 -125 493 -263 138 -139
+              224 -300 263 -493 27 -128 27 -238 0 -366 -39 -193 -125 -354 -263 -493 -139
+              -138 -300 -224 -493 -263 -128 -27 -238 -27 -366 0 -193 39 -354 125 -493 263
+              -138 139 -224 300 -263 493 -27 128 -27 238 0 366 39 193 125 354 263 493 230
+              229 548 327 859 263z"/>
+              <path d="M0 2560 l0 -110 480 0 480 0 0 110 0 110 -480 0 -480 0 0 -110z"/>
+              <path d="M4160 2560 l0 -110 480 0 480 0 0 110 0 110 -480 0 -480 0 0 -110z"/>
+              <path d="M498 2011 c-59 -16 -98 -31 -98 -39 0 -7 18 -67 41 -135 176 -527
+              567 -986 1069 -1255 174 -93 455 -196 470 -173 9 15 54 191 49 194 -2 1 -57
+              20 -121 41 -588 194 -1068 674 -1267 1269 -21 65 -41 120 -43 121 -1 1 -47 -9
+              -100 -23z"/>
+              <path d="M4477 1912 c-189 -585 -674 -1071 -1270 -1270 -65 -22 -118 -43 -119
+              -46 -4 -22 48 -196 59 -196 7 0 61 16 120 36 638 213 1147 702 1387 1331 46
+              120 69 204 59 213 -8 7 -174 50 -190 50 -4 0 -25 -53 -46 -118z"/>
+              <path d="M2450 480 l0 -480 110 0 110 0 0 480 0 480 -110 0 -110 0 0 -480z"/>
+            </g>
+          </svg>
+        </button>
+      </div>
 
       {/* courier's current location */}
       <Marker position={pos} icon={getCourierIcon()} />
-
-{/*
-      <RotatingMarker
-        position={pos}
-        heading={getHeading(prevPos, pos)}
-      />
 
       {/* radius circle */}
       <CircleF
@@ -601,102 +592,9 @@ export const Courier = () => {
       })}
 
       {/* courier live navigation */}
-      {directions && <DirectionsRenderer directions={directions}  options={{ suppressMarkers: true, draggable: true, preserveViewport: true }}
- />}
-    </GoogleMap>
-</div>
-    {/* delivery info popup */}
-    {/*selectedDelivery && (
-      <div
-        style={{
-          position: "absolute",
-          bottom: 30,
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: "white",
-          padding: "12px 18px",
-          borderRadius: "8px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-          zIndex: 1000,
-          maxWidth: 300,
-        }}
-      >
-        <h4>{selectedDelivery.Item}</h4>
-        <p><strong>Pickup:</strong> {selectedDelivery.BusinessAddress}</p>
-        <p><strong>Drop-off:</strong> {selectedDelivery.DestinationAddress}</p>
-        <p><strong>By:</strong> {selectedDelivery.BusinessName}</p>
-        <p><strong>Payment:</strong> {selectedDelivery.Payment} ₪</p>
-
-
-        {selectedDelivery.Status === "posted" && (
-          <button
-          onClick={async () => {
-            try {
-              await acceptDelivery(selectedDelivery.Id);
-              setSelectedDelivery(null);
-              setFeedback("success");
-            } catch (err) {
-              setSelectedDelivery(null);
-              setFeedback("failure");
-            }
-          }}
-          style={{ marginRight: 8 }}
-        >
-          Accept Delivery
-        </button>
-        )}
-        {selectedDelivery.Status === "accepted" && (
-          <button
-          onClick={async () => {
-            try {
-              await updateDeliveryStatus(selectedDelivery.Id, "picked_up");
-              setSelectedDelivery(null);
-              setNavigatingAddress(selectedDelivery.DestinationLocation); // navigation starts
-            } catch (err) {
-              setSelectedDelivery(null);
-              console.error(err)
-            }
-          }}
-          style={{ marginRight: 8 }}
-        >
-          Picked up?
-        </button>
-        )}
-
-        {selectedDelivery.Status === "picked_up" && (
-          <>
-            <button
-              onClick={async () => {
-                try{
-                  await updateDeliveryStatus(selectedDelivery.Id, "delivered");
-                  await fetchBalance();
-                  setSelectedDelivery(null);
-                  setNavigatingAddress(null);  //  stop navigation
-                  setDirections(null);
-                } catch (err) {
-                  setSelectedDelivery(null);
-                  setNavigatingAddress(null); //  stop navigation ?
-                  setDirections(null);
-                  console.error(err)
-                }
-              }}
-            >
-              Delivered?
-            </button>
-            <button
-              onClick={() => {
-                setNavigatingAddress(selectedDelivery.DestinationLocation);
-                setSelectedDelivery(null);
-              }}
-            >
-              Navigate to this destination
-            </button>
-          </>
-        )}
-        <button onClick={() => setSelectedDelivery(null)} style={{ marginTop: 10 }}>Cancel</button>
-      
-      </div>
-    )*/}
+      {directions && <DirectionsRenderer directions={directions}  options={{ suppressMarkers: true, draggable: true, preserveViewport: true }} />}
+      </GoogleMap>
+    </div>
 
     {selectedDelivery && (
       <DeliveryCard
@@ -738,6 +636,8 @@ export const Courier = () => {
           Close
         </button>
       </div>
+    )}
+    </>
     )}
   </>
   );

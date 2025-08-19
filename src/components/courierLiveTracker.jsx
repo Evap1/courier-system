@@ -3,9 +3,9 @@ import { GoogleMap, Marker, DirectionsRenderer, useJsApiLoader } from "@react-go
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
+import { Loader } from "./loader";
 
 const containerStyle = { width: "100%", height: "100vh" };
-const libraries = ["places"];
 /**
  * This component is responsible for continuously pushing
  * the courier's live location to Firestore every few seconds.
@@ -69,18 +69,24 @@ const CourierLiveTracker = ({ destination }) => {
     );
   }, [pos, destination]);
 
-  if (!pos) return <p>Loading courier map…</p>;
-
   return (
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={pos}
-      zoom={15}
-      onLoad={(map) => (mapRef.current = map)}
-    >
-      <Marker position={pos} />
-      {directions && <DirectionsRenderer directions={directions} />}
-    </GoogleMap>
+    <>
+    {(!pos)?(
+      <Loader/>):
+      (
+        <>
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={pos}
+            zoom={15}
+            onLoad={(map) => (mapRef.current = map)}
+          >
+            <Marker position={pos} />
+            {directions && <DirectionsRenderer directions={directions} />}
+          </GoogleMap>
+        </>
+      )}
+</>
   );
 };
 

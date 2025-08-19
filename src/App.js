@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "./components/protectedRoute";
 import { InvalidRoute } from "./components/invalidRoute";
+import { Loader } from "./components/loader";
 import { Login } from "./pages/login";
 import { Role } from "./pages/role";
 import { Admin } from "./pages/admin";
@@ -10,17 +11,22 @@ import { useAuth } from "./context/AuthContext"; // for global user / userRole
 import './theme.css'; 
 function App() {
   const { loading , userRole, user } = useAuth();
-  if (loading || (user && userRole === null)) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <span className="text-lg font-semibold text-gray-600">Loading...</span>
-      </div>
-    );
-  }
+  // if (loading || (user && userRole === null)) {
+  //   return (
+  //     <div className="h-screen flex items-center justify-center">
+  //       <span className="text-lg font-semibold text-gray-600">Loading...</span>
+  //     </div>
+  //   );
+  // }
 
   return (
     <BrowserRouter>
+          {(loading || (user && userRole === null)) ? (
+        <Loader />
+      ) : (
+        <>
       { /* Global Sign Out button */}
+      
       <Routes>
         <Route index path="/" element={<Login />}></Route>
         <Route
@@ -66,6 +72,8 @@ function App() {
           }
         />
       </Routes>
+      </>
+      )}
     </BrowserRouter>
   );
 }

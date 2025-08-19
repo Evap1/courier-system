@@ -1,36 +1,39 @@
-import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 
 export const Header = ({ balance, name }) => {
 const { user, signOut } = useAuth();
-const navRef = useRef();
+//const navRef = useRef();
 const navigate = useNavigate();
 
-// sticky animation logic
-useEffect(() => {
-  const customStyle = ["sticky-nav", "fixed", "border-b", "backdrop-blur-md", "bg-white/90"];
-  window.onscroll = () => {
-    if (window.scrollY > 80) {
-      navRef.current.classList.add(...customStyle);
-    } else {
-      navRef.current.classList.remove(...customStyle);
-    }
-  };
-  }, []);
+// // sticky animation logic
+// useEffect(() => {
+//   const customStyle = ["sticky-nav", "fixed", "border-b", "backdrop-blur-md", "bg-white/90"];
+//   window.onscroll = () => {
+//     if (window.scrollY > 80) {
+//       navRef.current.classList.add(...customStyle);
+//     } else {
+//       navRef.current.classList.remove(...customStyle);
+//     }
+//   };
+//   }, []);
 
   const handleSignOut = async () => {
-  if (!user) return;
-  await signOut();
-  navigate("/");
+    if (!user) return;
+    await signOut();
+    navigate("/");
   };
 
   return (
-  <header
-    ref={navRef}
-    className="w-full z-50 top-0 transition duration-300 shadow-sm"
-  >
+  // <header
+  //   ref={navRef}
+  //   className="w-full z-50 top-0 transition duration-300 shadow-sm"
+  // >
+    <header
+      className=" fixed top-0 left-0 right-0 z-50 h-16 border-b shadow-sm bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60"
+      style={{ pointerEvents: "auto" }}
+    >
     <div className="w-full mx-auto px-4 flex items-center justify-between h-16">
       {/* LEFT: logo */}
       <div className="flex items-center gap-4">
