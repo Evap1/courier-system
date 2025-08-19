@@ -1,3 +1,11 @@
+/**
+ * api.js — Authenticated HTTP helpers for the frontend.
+ * Centralize all REST calls from the React app to the Go backend by:
+ *  - Automatically attaching the current Firebase ID token (Bearer) to requests
+ *  - Using a single place for basic error handling / JSON parsing
+ * These helpers are used for any call to backend API.
+ **/
+
 import { auth } from "../firebase";
 
 // Get the token

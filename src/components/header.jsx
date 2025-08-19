@@ -1,23 +1,16 @@
+/**
+ * Header renders the fixed top app bar: logo (left), the signed-in user’s avatar/name and live balance (center), and a “Sign Out” button (right). 
+ * It pulls `user`/`signOut` from AuthContext, calls `signOut()` and navigates to “/” on click, and takes `balance` and `name` as props for display. 
+ * Meant for courier use only.
+ */
+
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 
 export const Header = ({ balance, name }) => {
 const { user, signOut } = useAuth();
-//const navRef = useRef();
 const navigate = useNavigate();
-
-// // sticky animation logic
-// useEffect(() => {
-//   const customStyle = ["sticky-nav", "fixed", "border-b", "backdrop-blur-md", "bg-white/90"];
-//   window.onscroll = () => {
-//     if (window.scrollY > 80) {
-//       navRef.current.classList.add(...customStyle);
-//     } else {
-//       navRef.current.classList.remove(...customStyle);
-//     }
-//   };
-//   }, []);
 
   const handleSignOut = async () => {
     if (!user) return;
@@ -26,10 +19,6 @@ const navigate = useNavigate();
   };
 
   return (
-  // <header
-  //   ref={navRef}
-  //   className="w-full z-50 top-0 transition duration-300 shadow-sm"
-  // >
     <header
       className=" fixed top-0 left-0 right-0 z-50 h-16 border-b shadow-sm bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60"
       style={{ pointerEvents: "auto" }}

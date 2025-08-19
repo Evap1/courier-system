@@ -1,3 +1,13 @@
+/**
+ * Role - two-step onboarding to set the authenticated user’s role and profile.
+ * Step 1 lets the user choose "courier" or "business". 
+ * Step 2 collects a name (and, for business, a structured address via <AddressInput/>). 
+ * On submit it writes to Firestore `users/{uid}`, preserving the existing email and setting `role`, plus role-specific fields:
+ * courier - { courierName, balance: 0 }
+ * business - { businessName, businessAddress, placeId, location:{lat,lng} }
+ * After saving, it calls `refreshUserRole()` from AuthContext and navigates to `/${role}`.
+ */
+
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";

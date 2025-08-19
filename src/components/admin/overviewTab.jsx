@@ -1,3 +1,9 @@
+/**
+ * OverViewTab renders the admin overview analytics: it ingests deliveries and couriers, fetches businesses via the API, and computes KPIs (last-7-days deliveries vs previous week,
+ * business/courier growth, and average payments per courier). A range switch (week/month/quarter) drives a status breakdown pie and a daily line chart (avg deliveries & income per courier)
+ * using Recharts, plus a “Recent Deliveries” table.
+ */
+
 import { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
@@ -16,7 +22,7 @@ const STATUS_COLORS = {
   delivered: "#10B981",
 };
 
-// ---------- date helpers ----------
+// date helpers 
 function toDate(any) {
   if (!any) return null;
   if (typeof any === "object" && typeof any.toDate === "function") return any.toDate();
@@ -39,7 +45,7 @@ function getEntityCreatedAt(e) {
   return e?.CreatedAt ?? e?.createdAt ?? e?.created_at ?? null;
 }
 
-// ---------- UI options ----------
+// UI options 
 const timeRanges = [
   { label: "Last 7 days", value: "week" },
   { label: "This Month",  value: "month" },
@@ -72,14 +78,14 @@ export const OverViewTab = ({couriers, deliveries}) => {
     return m;
   }, [couriers]);
 
-  // ---------- derived common dates ----------
+  // derived common dates 
   const now       = useMemo(() => new Date(), []);
   const thisWeekS = useMemo(() => startOfWeek(now), [now]);
   const thisWeekE = useMemo(() => endOfDay(new Date(thisWeekS.getTime() + 6*86400000)), [thisWeekS]);
   const prevWeekS = useMemo(() => new Date(thisWeekS.getTime() - 7*86400000), [thisWeekS]);
   const prevWeekE = useMemo(() => endOfDay(new Date(prevWeekS.getTime() + 6*86400000)), [prevWeekS]);
 
-  // ---------- KPI #1: total Deliveries (last week) + trend ----------
+  // KPI #1: total Deliveries (last week) + trend 
   const kpiDeliveries = useMemo(() => {
     const c = deliveries.filter(d => isWithinRange(d.createdAt, thisWeekS, thisWeekE)).length;
     const p = deliveries.filter(d => isWithinRange(d.createdAt, prevWeekS, prevWeekE)).length;
@@ -98,7 +104,7 @@ export const OverViewTab = ({couriers, deliveries}) => {
     }).length;
   }
 
-  // ---------- KPI #2: businesses + trend vs last week ----------
+  // KPI #2: businesses + trend vs last week 
   const kpiBusinesses = useMemo(() => {
     const totalNow = businesses.length;
     const asOfPrevWeekEnd = countAsOf(businesses, prevWeekE);
@@ -110,7 +116,7 @@ export const OverViewTab = ({couriers, deliveries}) => {
     return { current: totalNow, prev: asOfPrevWeekEnd, diff, pct, up: diff >= 0 };
   }, [businesses, prevWeekE]);
 
-  // ---------- KPI #3: couriers + trend vs last week ----------
+  // KPI #3: couriers + trend vs last week 
   const kpiCouriers = useMemo(() => {
     const totalNow = couriers.length;
     const asOfPrevWeekEnd = countAsOf(couriers, prevWeekE);
@@ -122,7 +128,7 @@ export const OverViewTab = ({couriers, deliveries}) => {
     return { current: totalNow, prev: asOfPrevWeekEnd, diff, pct, up: diff >= 0 };
   }, [couriers, prevWeekE]);
 
-  // ---------- KPI #4: average payments (Week) per courier + trend ----------
+  // KPI #4: average payments (Week) per courier + trend 
   const kpiAvgPayments = useMemo(() => {
     const inRange = (s,e) => deliveries
       .filter(d => d.status === "delivered" && isWithinRange(d.createdAt, s, e));
@@ -146,7 +152,7 @@ export const OverViewTab = ({couriers, deliveries}) => {
     return { current: cur, prev, diff, pct, up: diff >= 0 };
   }, [deliveries, thisWeekS, thisWeekE, prevWeekS, prevWeekE]);
 
-  // ---------- pie + continuous chart ----------
+  // pie + continuous chart 
   const rangeFrom = useMemo(() => {
     const n = startOfDay(now);
     if (range === "month") { n.setDate(1); return n; }

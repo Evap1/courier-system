@@ -9,15 +9,18 @@ import (
 
 )
 
+// UserService provides user-related operations backed by Firestore.
 type UserService struct {
 	firestore *db.FirestoreClient
 }
 
+// NewUserService creates a new UserService with the given Firestore client.
 func NewUserService(fs *db.FirestoreClient) *UserService {
 	return &UserService{firestore: fs}
 }
 
-
+// GetUserRole returns the role ("courier" or "business") for the given user ID.
+// Returns an error if the user does not exist or role is missing/invalid.
 func (u *UserService) GetUserRole(ctx context.Context, uid string) (string, error) {
 	doc, err := u.firestore.Collection("users").Doc(uid).Get(ctx)
 	if err != nil {
@@ -30,6 +33,8 @@ func (u *UserService) GetUserRole(ctx context.Context, uid string) (string, erro
 	return role, nil
 }
 
+// GetBusinessInfo fetches full business user info by ID.
+// Returns error if the user is not a business.
 func (u *UserService) GetBusinessInfo(ctx context.Context, uid string) (*api.BusinessUser, error){
 	doc, err := u.firestore.Collection("users").Doc(uid).Get(ctx)
 	if err != nil {
@@ -51,6 +56,8 @@ func (u *UserService) GetBusinessInfo(ctx context.Context, uid string) (*api.Bus
 	return &business, nil
 }
 
+// GetCourierInfo fetches full courier user info by ID.
+// Returns error if the user is not a courier.
 func (u *UserService) GetCourierInfo(ctx context.Context, uid string) (*api.CourierUser, error){
 	doc, err := u.firestore.Collection("users").Doc(uid).Get(ctx)
 	if err != nil {
@@ -71,6 +78,7 @@ func (u *UserService) GetCourierInfo(ctx context.Context, uid string) (*api.Cour
 	return &courier, nil
 }
 
+// GetAllCouriers returns all users with role "courier".
 func (u *UserService) GetAllCouriers(ctx context.Context) ( []*api.CourierUser , error){
 	iter := u.firestore.Collection("users").Where("role", "==", "courier").Documents(ctx)
 	defer iter.Stop()
@@ -96,6 +104,7 @@ func (u *UserService) GetAllCouriers(ctx context.Context) ( []*api.CourierUser ,
 	return couriers, nil
 }
 
+// GetAllBusinesses returns all users with role "business".
 func (u *UserService) GetAllBusinesses(ctx context.Context) ([]*api.BusinessUser, error){
 	iter := u.firestore.Collection("users").Where("role", "==", "business").Documents(ctx)
 	defer iter.Stop()

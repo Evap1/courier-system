@@ -1,13 +1,18 @@
+/**
+ * Login renders the unified auth page and routes users to the right flow. It supports three paths:
+ * (1) Google sign-in - checks Firestore `users/{uid}` for an existing `role`; if found, navigates to `/${role}`, otherwise creates a user doc via `createUserDocument(uid,email,null)` and goes to `/role`.
+ * (2) Email/password Sign Up - creates the Firebase user, writes the user doc with no role, then navigates to `/role`.
+ * (3) Email/password Sign In - authenticates and, if a role exists in Firestore, navigates to `/${role}` (otherwise the global effect below will route to `/role`).
+ * The component consumes `{ user, userRole, loading }` from AuthContext and auto-redirects (`/${userRole}` when both exist (role based UI), or `/role` when only `user` exists (role selection page)). 
+ */
+
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUserDocument } from "../services/firestoreService";
 import { useAuth } from "../context/AuthContext";
 
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signInWithPopup
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 
 import { doc, getDoc } from "firebase/firestore";
 import { auth , googleProvider, db} from "../firebase";
@@ -146,83 +151,7 @@ export const Login =  () => {
         default: return 'Something went wrong. Please try again.';
       }
     };
-    // return (
-    //   <section>
-    //     <h2>Login</h2>
-    //     <form>
-    //       {isSignUpActive && <legend>Sign Up</legend>}
-    //       {!isSignUpActive && <legend>Sign In</legend>}
-  
-    //       <fieldset>
-    //         <ul>
-    //           <li>
-    //             <label htmlFor="email">Email</label>
-    //             <input type="text" id="email" onChange={handleEmailChange} />
-    //           </li>
-    //           <li>
-    //             <label htmlFor="password">Password</label>
-    //             <input
-    //               type="password"
-    //               id="password"
-    //               onChange={handlePasswordChange}
-    //             />
-    //           </li>
-    //         </ul>
-
-    //         {error && <p style={{ color: "red" }}>{error}</p>}
-
-    //         <button
-    //         type="button"
-    //         onClick={handleGoogleSignIn}
-    //         style={{
-    //           marginTop: "1rem",
-    //           backgroundColor: "#4285F4",
-    //           color: "#fff",
-    //           padding: "0.5rem 1rem",
-    //           border: "none",
-    //           cursor: "pointer",
-    //         }}
-    //       >
-    //         Sign in with Google
-    //       </button>
-          
-    //         {isSignUpActive && (
-    //           <button type="button" onClick={handleSignUp}>
-    //             Sign Up
-    //           </button>
-    //         )}
-    //         {!isSignUpActive && (
-    //           <button type="button" onClick={handleSignIn}>
-    //             Sign In
-    //           </button>
-    //         )}
-    //       </fieldset>
-
-
-    //       <button
-    //         type="button"
-    //         onClick={handleMethodChange}
-    //         // make it look like hyperlink
-    //         style={{
-    //           marginTop: "1rem",
-    //           background: "none",
-    //           border: "none",
-    //           color: "blue",
-    //           textDecoration: "underline",
-    //           cursor: "pointer",
-    //         }}
-    //       >
-    //         {isSignUpActive ? "Login" : "Create an account"}
-    //       </button>
-
-    //     </form>
-
-
-    //   </section>
-    // );
-  // };
-
-  // export default () => {
+   
     return (
         <main className="w-full flex ">
           {/* LEFT PANEL */}

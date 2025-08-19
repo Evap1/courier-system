@@ -1,3 +1,10 @@
+/**
+ * CouriersTab renders the admin “Couriers” view: a live Google Map of current courier locations, an earnings-based leaderboard, and a 7-day activity chart. 
+ * Clicking a marker shows an info window with that courier’s income and delivery count. 
+ * Expects deliveries, couriers, and locations. 
+ * Use this to monitor real-time activity and performance at a glance.
+ */
+
 import { useState } from "react";
 import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
 

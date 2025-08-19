@@ -1,3 +1,13 @@
+/**
+ * AuthContext provides global authentication and role state for the app.
+ * It subscribes to Firebase Auth (`onAuthStateChanged`) and, when a user is present,
+ * fetches their `role` from Firestore at `users/{uid}`. The provider exposes
+ * `{ user, userRole, loading, refreshUserRole, signOut }` to consumers via `useAuth()`.
+ * `loading` is true until the initial auth/role read completes. `refreshUserRole()` re-reads
+ * the role after onboarding/changes, and `signOut()` logs out via Firebase and clears state.
+ * The app is wrapped with <AuthProvider> and calls `useAuth()` in components to guard UI.
+ */
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -11,8 +21,6 @@ export const AuthProvider = ({ children }) => {
   const [userRole, setUserRole] = useState(null);  // Firestore role
   const [loading, setLoading] = useState(true);
 
-  const [error, setError] = useState(null);
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
 
@@ -23,7 +31,6 @@ export const AuthProvider = ({ children }) => {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setUserRole(docSnap.data().role);
-          //console.log("firebase role:", docSnap.data().role);
         }
       } else {
         setUser(null);
@@ -35,13 +42,14 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    console.log("userRole changed ->", userRole);
-  }, [userRole]);
+  // for debugging : 
+  // useEffect(() => {
+  //   console.log("userRole changed ->", userRole);
+  // }, [userRole]);
 
-  useEffect(() => {
-    console.log("user changed ->", user);
-  }, [user]);
+  // useEffect(() => {
+  //   console.log("user changed ->", user);
+  // }, [user]);
 
   const signOut = async () => {
     try {

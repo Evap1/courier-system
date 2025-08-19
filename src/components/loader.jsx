@@ -1,3 +1,7 @@
+/**
+ * Loader renders a CSS-driven loading animation (see ./loader.css) to indicate background activity.
+ */
+
 import "./loader.css";
 
 export const Loader = () => {

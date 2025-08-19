@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { getWithAuth } from "../../api/api";
+/**
+ * ProfileTab renders a simple unified profile card for any role (business/courier/admin).
+ * It expects a `profile` object and derives display fields with sensible fallbacks:
+ * For business users it also shows BusinessAddress when present. Intended for the account/profile view.
+ */
 
 export const ProfileTab = ({profile = {}}) => {
-    // const [profile, setProfile] = useState(null);
-    const [error, setError] = useState("");
 
-    if (error || !profile) {
+    if (!profile) {
       return (
         <div className="flex justify-center items-center h-64">
           <span className="text-red-500 text-lg">{"No profile found."}</span>

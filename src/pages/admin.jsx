@@ -1,3 +1,11 @@
+/**
+ * Admin is the main dashboard shell for administrators: 
+ * it authenticates via AuthContext, fetches admin profile (`/me`) and the full couriers list (`/couriers`), 
+ * subscribes in real time to all Firestore deliveries (`collection(db,"deliveries")`), 
+ * and also listens to each courier’s live location to build a `locations` map. 
+ * left sidebar switches tab, includes a sign-out action and short profile name + avatar.
+ */
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -15,7 +23,7 @@ export const Admin = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("overview"); // initial tab is overview
   const [adminData, setAdminData] = useState({});
   const [deliveries, setDeliveries] = useState([]);
   const [couriers, setCouriers] = useState([]);

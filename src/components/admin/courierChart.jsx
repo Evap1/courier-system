@@ -1,3 +1,10 @@
+/**
+ * CourierActivityChart displays a 7-day trend of completed deliveries using Recharts.
+ * From the provided deliveries, couriers, it aggregates daily counts, computes the average across
+ * couriers, highlights lowest/highest performers, and optionally overlays a selected courier via a dropdown.
+ * Used in the admin analytics view to quickly compare courier performance over the last week.
+ */
+
 import { useState, useMemo } from "react";
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from "recharts";
 
@@ -61,7 +68,6 @@ export const CourierActivityChart = ({ deliveries, couriers }) => {
   const maxCourier = courierTotals[courierTotals.length - 1]?.courier || null;
 
   const minData = minCourier ? getCourierData(minCourier.Id).map((d) => ({ date: d.date, min: d.count })) : [];
-
   const maxData = maxCourier ? getCourierData(maxCourier.Id).map((d) => ({ date: d.date, max: d.count })) : [];
 
   // selected courier's data

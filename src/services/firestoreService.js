@@ -2,8 +2,6 @@ import { db } from "../firebase";
 
 import { doc, collection, Timestamp, setDoc, addDoc } from "firebase/firestore";
 
-
-
 /**
  * Creates a new user document in the Firestore "users" collection.
  * @param {string} uid - User ID from Firebase Authentication.

@@ -1,10 +1,16 @@
+/**
+ * NewDeliveryTab renders a modal for business users to create a delivery: 
+ * enter an item, choose a destination via <AddressInput/>, and it auto-computes distance and a read-only price using a time-based multiplier (rounded to 0.5 NIS with a minimum fare). 
+ * On submit it POSTs to /deliveries with API, handles basic validation/error states, and on success clears the form, shows <ConfettiBurst/>, and auto-closes via onClose(). 
+ */
+
 import { useEffect, useState } from "react";
 import { postWithAuth } from "../../api/api";
 import { AddressInput } from "../address";
 import ConfettiBurst from "../../components/confettiButton";
 
 
-/** ---------- Helpers ---------- **/
+/** Helpers  **/
 // below helpers support built in payment- without any option to modify it from business user.
 
 // distance in KM

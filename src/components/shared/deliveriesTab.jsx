@@ -1,12 +1,14 @@
+/**
+ * DeliveriesTab renders a filterable, role-aware deliveries table with an optional live map panel.
+ * Supports client-side filters by item, status, and (admin-only) business. Rows show item, status (color-coded), destination, submission time, and courier info. 
+ * For deliveries with an assigned courier (assignedTo) and not just “accepted”, a button toggles a right-side <CourierMap/> panel
+ * bound to the selected delivery; otherwise a short status message is shown.
+ */
+
 import { useState } from "react";
 import CourierMap from "../courierMap";
 
-export const DeliveriesTab = ({
-  deliveries = [],
-  isAdmin,
-  visibleDelivery,
-  setVisibleDelivery = () => {},
-}) => {
+export const DeliveriesTab = ({ deliveries = [], isAdmin, visibleDelivery, setVisibleDelivery = () => {} }) => {
   const [filterItem, setFilterItem] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterBusiness, setFilterBusiness] = useState("");

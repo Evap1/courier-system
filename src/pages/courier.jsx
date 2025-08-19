@@ -1,3 +1,20 @@
+/**
+ * Courier — live courier console (map + job flow) with route simulation.
+ * Shows the courier’s position (marker + adjustable radius circle), fetches nearby “posted”
+ * deliveries, and lets the user Accept → Pick Up → Deliver. It renders Google Maps
+ * directions while navigating, updates the header with the courier’s balance, and
+ * emits confetti on success. Business/Admin views can watch the courier at `couriers/{uid}/location/current`.
+ *
+ * Test vs Real mode
+ * -----------------
+ * TEST (default): 
+ * `const TEST_OVERRIDE = true` simulates motion using `courier_routes.json` and the `couriersMap` (UID → route key).
+ * Every 3s it sets `pos` and writes (!) the simulated location to Firestore so other dashboards see live movement.
+ * REAL GPS:
+ * set `TEST_OVERRIDE = false`, that way the app uses `navigator.geolocation.watchPosition` to update `pos`.
+ * Use this mode to see your real movement.
+ */
+
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect , useRef} from "react";
 import { GoogleMap, Marker, CircleF } from "@react-google-maps/api";
@@ -18,7 +35,6 @@ import * as Slider from "@radix-ui/react-slider";
 import mapStyle from "../components/mapStyle.json"; 
 
 import {DeliveryCard} from "../components/courier/deliveryCard"
-// import {RotatingMarker} from "../components/courier/rotatingMarker"
 
 import { AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -41,19 +57,6 @@ function haversine({ lat: aLat, lng: aLng }, { lat: bLat, lng: bLng }) {
   const aa = Math.sin(dLat / 2) ** 2 + Math.cos(d2r(aLat)) * Math.cos(d2r(bLat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(aa));   // distance in km
 }
-
-// returns the angle in degrees between two coordinates
-// function getHeading(from, to) {
-//   const lat1 = (from.lat * Math.PI) / 180;
-//   const lat2 = (to.lat * Math.PI) / 180;
-//   const dLng = ((to.lng - from.lng) * Math.PI) / 180;
-
-//   const y = Math.sin(dLng) * Math.cos(lat2);
-//   const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-//   const bearing = Math.atan2(y, x);
-
-//   return (bearing * 180) / Math.PI; // radians to degrees
-// }
 
 function kmForZoom(z) {
   const table = { 15: 1, 14: 2, 13: 5, 12: 10, 11: 20, 10: 40, 9: 80, 8: 160, 7: 320 };
@@ -171,7 +174,7 @@ export const Courier = () => {
   }, );
 
 
-  // for testing
+  // for testing or demo
   useEffect(() => {
     if (!TEST_OVERRIDE || !user) return;
 
@@ -270,9 +273,7 @@ export const Courier = () => {
   const acceptDelivery = async (id) => {
     try {
       await postWithAuth(`http://localhost:8080/deliveries/${id}/accept`);
-      //alert("Delivery accepted!");
     } catch (err) {
-      //alert("Failed to accept. Maybe someone else already took it.");
       // throw the err to be catched by selectedDelivery to set the correct error
       throw(err)
     }
@@ -283,13 +284,11 @@ export const Courier = () => {
       await patchWithAuth(`http://localhost:8080/deliveries/${id}`, {
         status: newStatus,
       });
-      //alert("Status changed to " + newStatus);
     } catch (err) {
-      //alert("Status change failed " + err);
     }
   };
 
-  /* sync radius ← zoom (map events) */
+  /* sync radius - zoom (map events) */
   const handleZoom = () => {
     const z = mapRef.current?.getZoom();
     if (!z) return;
@@ -434,7 +433,7 @@ export const Courier = () => {
     setSelectedDelivery(null);
   }
 
-  /* handle the three error states cleanly */
+  /* handle the error states cleanly */
   if (geoError)        return <p style={{ color: "red" }}>{geoError}</p>;
 
   return (

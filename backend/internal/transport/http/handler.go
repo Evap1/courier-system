@@ -1,5 +1,6 @@
 package httptransport
-
+// Package httptransport exposes the HTTP (Gin) layer that adapts requests to the service layer.
+// Handlers parse/validate input, authorize via userSvc, then delegate to deliverySvc.
 import (
 	"errors"
 	"context"
@@ -9,29 +10,25 @@ import (
 	"github.com/Evap1/courier-system/backend/api"
 )
 
-// DeliveryHandler satisfies the generated ServerInterface.
+// Handler implements the generated ServerInterface by delegating to services.
+//
+// userSvc: identity/role lookups and user data (who is calling? what role? fetch business/courier info)
+// deliverySvc: delivery domain logic (create/list/accept/update with transactions)
+// Splitting responsibilities keeps HTTP concerns thin and enforces separation between user/authorization data and delivery workflow logic.
 type Handler struct {
 	deliverySvc *service.DeliveryService
 	userSvc *service.UserService
 }
 
-// NewDeliveryHandler injects the service layer.
+// NewHandler wires the HTTP layer to the delivery and user services.
 func NewHandler(d *service.DeliveryService, u *service.UserService) *Handler {
 	return &Handler{deliverySvc: d, userSvc: u}
 }
 
-
-// // DeliveryHandler satisfies the generated ServerInterface.
-// type DeliveryHandler struct {
-// 	svc *service.DeliveryService
-// }
-
-// // NewDeliveryHandler injects the service layer.
-// func NewDeliveryHandler(s *service.DeliveryService) *DeliveryHandler {
-// 	return &DeliveryHandler{svc: s}
-// }
-
 // POST /deliveries 
+// creates a new delivery for the authenticated business.
+// Flow: bind JSON - fetch business via userSvc (authZ & data) - delegate create to deliverySvc.
+// Rejects if caller isn't a business or business name doesn’t match the authenticated user.
 func (h *Handler) CreateDelivery(c *gin.Context) {
 	creatorUID := c.GetString("uid") // set by (future) auth middleware
     var req DeliveryCreate                              
@@ -75,7 +72,9 @@ func (h *Handler) CreateDelivery(c *gin.Context) {
 	c.JSON(http.StatusCreated, response)
 }
 
-// === GET /deliveries ===
+// GET /deliveries
+// lists deliveries per caller’s role with optional status/geo/pagination.
+// Flow: read query - resolve caller role via userSvc - build ListFilter - delegate to deliverySvc.
 func (h *Handler) ListDeliveries(c *gin.Context, params ListDeliveriesParams) {
 	flt := service.ListFilter{
 		Role: "",
@@ -129,6 +128,8 @@ func (h *Handler) ListDeliveries(c *gin.Context, params ListDeliveriesParams) {
 
 
 // POST / deliveries/id/accept
+// lets an authenticated courier accept a posted delivery.
+// Flow: ensure role=courier via userSvc - delegate to deliverySvc.AcceptDelivery - map domain errors to HTTP.
 func (h *Handler) AcceptDelivery(c *gin.Context, deliveryID string) {
 	// authenticated courier UID from Gin context
 	courierUID, ok := c.Get("uid")             
@@ -166,6 +167,8 @@ func (h *Handler) AcceptDelivery(c *gin.Context, deliveryID string) {
 }
 
 // PATCH / deliveries/id/
+// updates delivery status for the assigned courier.
+// Flow: bind patch - ensure role=courier via userSvc - delegate to deliverySvc.UpdateDeliveryStatus - map invalid transition/update to 400.
 func (h *Handler) UpdateDelivery(c *gin.Context, deliveryID string) {
 
 	// parse & validate JSON body
@@ -221,6 +224,8 @@ func errBody(e error) Error {
 }
 
 // GET /me
+// returns the caller’s profile in the OpenAPI oneOf shape.
+// Uses userSvc to resolve role and fetch either BusinessUser or CourierUser; returns a minimal Admin object.
 func (h *Handler) GetMe(c *gin.Context) {
 	uid, ok := c.Get("uid")
 	if !ok || uid == "" {
@@ -279,6 +284,7 @@ func OneOfUserFromCourier(u *api.CourierUser) api.OneOfUser {
 
 
 // GET couriers/
+// returns all couriers; restricted to role=admin (checked via userSvc).
 func (h *Handler) ListCouriers(c *gin.Context) {
 	uid := c.GetString("uid")
 	ctx := context.Background()
@@ -296,6 +302,7 @@ func (h *Handler) ListCouriers(c *gin.Context) {
 }
 
 // GET businesses/
+// returns all businesses; restricted to role=admin (checked via userSvc).
 func (h *Handler) ListBusinesses(c *gin.Context) {
 	uid := c.GetString("uid")
 	ctx := context.Background()

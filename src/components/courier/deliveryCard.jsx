@@ -16,22 +16,8 @@ const variants = {
   }
 };
 
-export const DeliveryCard = ({
-  delivery,
-  onClose,
-  onAccept,
-  onPickedUp,
-  onDelivered,
-  onNavigate,
-  etaToBusiness,
-  etaToDest,
-}) => {
-  useEffect(() => {
-    if (delivery?.justAccepted) {
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-    }
-  }, [delivery?.justAccepted]);
-
+export const DeliveryCard = ({delivery, onClose, onAccept, onPickedUp, onDelivered, onNavigate, etaToBusiness, etaToDest}) => {
+  
   useEffect(() => {
     const onEsc = (e) => e.key === "Escape" && onClose?.();
     window.addEventListener("keydown", onEsc);

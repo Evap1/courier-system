@@ -1,3 +1,10 @@
+/**
+ * OverViewTab renders analytics dashboard driven by `deliveries`: it normalizes `createdAt` (Firestore Timestamp/seconds/ms)
+ * computes KPIs (total/completed, “Outcome This Month”, and Avg. Cost this week vs last)
+ * lets the user switch a time range (week/month/quarter) that feeds a status pie and a combined bar+line chart (daily deliveries & income). 
+ * It also lists recent deliveries. All aggregations are memoized client-side for snappy UI; expects delivery fields {status, payment, createdAt, assignedTo/deliveredBy}.
+ */
+
 import { useMemo, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, Line } from "recharts";
 
@@ -8,7 +15,7 @@ const STATUS_COLORS = {
   delivered: "#10B981",
 };
 
-// ---------- date helpers ----------
+// date helpers
 function toDate(any) {
   if (!any) return null;
   // Firestore Timestamp

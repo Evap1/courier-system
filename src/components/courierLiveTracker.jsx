@@ -1,3 +1,9 @@
+/**
+ * This component is responsible for continuously pushing
+ * the courier's live location to Firestore every few seconds.
+ * It does not render any visible content.
+ */
+
 import { useEffect, useState, useRef } from "react";
 import { GoogleMap, Marker, DirectionsRenderer, useJsApiLoader } from "@react-google-maps/api";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -6,11 +12,7 @@ import { useAuth } from "../context/AuthContext";
 import { Loader } from "./loader";
 
 const containerStyle = { width: "100%", height: "100vh" };
-/**
- * This component is responsible for continuously pushing
- * the courier's live location to Firestore every few seconds.
- * It does not render any visible content.
- */
+
 const CourierLiveTracker = ({ destination }) => {
   const { user } = useAuth();
   const [pos, setPos] = useState(null);

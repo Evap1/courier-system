@@ -12,7 +12,7 @@ import (
 	"fmt"
 )
 
-// api.Delivery defined by the yaml in 	backend/internal/transport/http/openapi.gen.go
+// api.Delivery defined by the yaml in backend/internal/transport/http/openapi.gen.go
 
 // DeliveryService groups methods that operate on one delivery aggregate.
 // a pointer holding one Firestore client. The pointer itself never changes; the client is thread-safe and reused for every request.
@@ -57,7 +57,7 @@ func (s *DeliveryService) CreateDelivery(ctx context.Context, req *api.DeliveryC
 }
 
 
-// LISTDELIVERIES
+// a struct used for filtering in LISTDELIVERIES
 type ListFilter struct {
 	Status       *string
 	CenterLat    *float64
@@ -70,6 +70,11 @@ type ListFilter struct {
 	CourierID	 string
 }
 
+// ListDeliveries returns deliveries based on the given filter (role, status, geo, pagination).
+// - Business: only their deliveries.
+// - Courier: posted deliveries nearby + their assigned ones.
+// - Admin: all deliveries.
+// Returns deliveries, a nextPageToken ("" if none), or error.
 func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter) ([]*api.Delivery, string, error) {
 	
 	var result []*api.Delivery
@@ -164,13 +169,16 @@ func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter)
 	return result, nextPageToken, nil
 }
 
-// POST / deliveries/id/accept
-// Transaction reads the doc, checks AssignedTo, writes new doc.
-// If two couriers race, the second txn fails with ErrAlreadyAssigned.
 var ErrAlreadyAssigned = errors.New("delivery already assigned")
 
 var ErrInvalidUpdate = errors.New("this delivery assigned to different courier")
 
+// POST / deliveries/id/accept
+// AcceptDelivery assigns a posted delivery to the given courier.
+// Only allowed if status = "posted" and not already assigned.
+// Transaction reads the doc, checks AssignedTo, writes new doc.
+// If two couriers race, the second txn fails with ErrAlreadyAssigned.
+// Returns the updated delivery or error.
 func (s *DeliveryService) AcceptDelivery(ctx context.Context, deliveryID, courierUID string,) (*api.Delivery, error) {
 
     docRef := s.firestore.Collection("deliveries").Doc(deliveryID) //creates a reference to /deliveries/{id} once
@@ -204,7 +212,7 @@ func (s *DeliveryService) AcceptDelivery(ctx context.Context, deliveryID, courie
 		return tx.Set(docRef, d)
 		// if err != nil { return err }
 
-		// // if reached here, the commit is successfull, the delivery is accepted
+		// if reached here, the commit is successfull, the delivery is accepted
         // accepted = &d
         // return nil
     })
@@ -225,10 +233,10 @@ func (s *DeliveryService) AcceptDelivery(ctx context.Context, deliveryID, courie
 
 
 // PATCH /deliveries/{id}
-// TODO:
-// 1. make sure only the assigned courier can modify
-// 2. if delivered set the courier to null
-// 3 . more problems
+// UpdateDeliveryStatus transitions a delivery by the assigned courier only. 
+// States allowed: accepted → picked_up → delivered.
+// On "delivered", also credits courier’s balance.
+// Returns the updated delivery or error.
 func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, deliveryID string, newStatus string, courierUID string) (*api.Delivery, error) {
 
 	docRef := s.firestore.Collection("deliveries").Doc(deliveryID)

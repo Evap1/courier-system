@@ -1,3 +1,9 @@
+/**
+ * Business is the dashboard shell for business users. 
+ * After auth, it fetches the business profile via `/me` and subscribes in real time to Firestore deliveries for this business. 
+ * It manages top-level UI state: tabs and add new delivery modal.
+ * Includes a sidebar with navigation and a sign-out action.
+ */
 
 import { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";

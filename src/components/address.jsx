@@ -1,3 +1,8 @@
+/**
+ * AddressInput wraps Google Places Autocomplete to collect a structured address.
+ * Restricted to Israel and address-type results only.
+ */
+
 import { useRef, useState } from "react";
 import { Autocomplete } from "@react-google-maps/api";
 
