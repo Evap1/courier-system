@@ -27,11 +27,6 @@ root.render(
     <LoadScript
     googleMapsApiKey= {googleMapsApiKey}
     libraries={["places"]}          // any future page can now use Autocomplete
-    // loadingElement={
-    //   <div className="text-center py-4 text-gray-600 text-sm">
-    //     Loading maps...
-    //   </div>
-    // }
     >
       <App />
     </LoadScript>

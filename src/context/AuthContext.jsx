@@ -11,26 +11,37 @@ export const AuthProvider = ({ children }) => {
   const [userRole, setUserRole] = useState(null);  // Firestore role
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("user:", firebaseUser);
 
       if (firebaseUser) {
         setUser(firebaseUser);
+        console.log(user);
         const docRef = doc(db, "users", firebaseUser.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setUserRole(docSnap.data().role);
+          //console.log("firebase role:", docSnap.data().role);
         }
       } else {
         setUser(null);
         setUserRole(null);
       }
       setLoading(false);  // <-- this is when loading ends
-    });
 
+    });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    console.log("userRole changed ->", userRole);
+  }, [userRole]);
+
+  useEffect(() => {
+    console.log("user changed ->", user);
+  }, [user]);
 
   const signOut = async () => {
     try {
@@ -50,6 +61,10 @@ export const AuthProvider = ({ children }) => {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setUserRole(docSnap.data().role);
+        setLoading(false);
+      }
+      else {
+        setUserRole(null);
       }
     }
   };

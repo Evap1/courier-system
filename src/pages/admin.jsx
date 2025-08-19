@@ -31,7 +31,7 @@ export const Admin = () => {
           const data = await getWithAuth("http://localhost:8080/me");
           setAdminData(data);
         } catch (err) {
-          console.error("Failed to fetch business info", err);
+          console.error("Failed to fetch admin info", err);
         }
       };
       fetchAdmin();
@@ -47,7 +47,7 @@ export const Admin = () => {
     };
     fetchCouriers();
 
-    // Listen to ALL deliveries in Firestore in real time
+    // listen to ALL deliveries in Firestore in real time
     const unsub = onSnapshot(collection(db, "deliveries"), (snapshot) => {
       const results = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setDeliveries(results);
@@ -86,7 +86,7 @@ export const Admin = () => {
 
   return(
     <div className="flex min-h-screen">
-      {/* Side Navbar */}
+      {/* side navbar */}
       <aside
           className="w-64 fixed top-0 left-0 bottom-0 z-30 bg-white border-r flex-shrink-0">
           <div className="flex flex-col h-full">
@@ -100,7 +100,6 @@ export const Admin = () => {
 
                     <li><button onClick={() => setTab("overview")} className="flex items-center gap-x-2 text-gray-600 p-2 rounded-lg  hover:bg-gray-50 active:bg-gray-100 duration-150">📊 Overview</button></li>
                     <li><button onClick={() => setTab("deliveries")} className="flex items-center gap-x-2 text-gray-600 p-2 rounded-lg  hover:bg-gray-50 active:bg-gray-100 duration-150">📦 Deliveries</button></li>
-
                     <li><button onClick={() => setTab("couriers")} className="flex items-center gap-x-2 text-gray-600 p-2 rounded-lg  hover:bg-gray-50 active:bg-gray-100 duration-150">🛵 Couriers</button></li>
                     <li><button onClick={() => setTab("profile")} className="flex items-center gap-x-2 text-gray-600 p-2 rounded-lg  hover:bg-gray-50 active:bg-gray-100 duration-150">👤 Profile</button></li>
                   </ul>
@@ -121,27 +120,12 @@ export const Admin = () => {
           </div>
       </aside>
 
-      {/* Main Content */}
+      {/* main content */}
       <main className="flex-1 ml-64 p-6 bg-gray-50 min-h-screen">
-        {tab === "overview" && <OverViewTab 
-        deliveries={deliveries} couriers={couriers}
- />}
-        {tab === "deliveries" && (
-          <DeliveriesTab
-            deliveries={deliveries}
-            isAdmin={true}
-            visibleDelivery={visibleDelivery}
-            setVisibleDelivery={setVisibleDelivery}
-          />
-        )}
-        {tab === "couriers" && <CouriersTab
-            deliveries={deliveries}
-            couriers={couriers}
-            locations={locations}
-            />}
-        {tab === "profile" && <ProfileTab
-            isAdmin={true}
-        />}
+        {tab === "overview" && <OverViewTab  deliveries={deliveries} couriers={couriers} /> }
+        {tab === "deliveries" && ( <DeliveriesTab deliveries={deliveries} isAdmin={true} visibleDelivery={visibleDelivery} setVisibleDelivery={setVisibleDelivery} /> )}
+        {tab === "couriers" && <CouriersTab deliveries={deliveries} couriers={couriers} locations={locations} />}
+        {tab === "profile" && <ProfileTab profile={adminData} />}
       </main>
     </div>
   );

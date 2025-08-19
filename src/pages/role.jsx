@@ -49,7 +49,7 @@ export const Role = () => {
 
 
             await refreshUserRole(); // Refetch from Firestore
-
+            
             // navigate to the relevant dashboard
             navigate(`/${selectedRole}`);
         } catch (err) {

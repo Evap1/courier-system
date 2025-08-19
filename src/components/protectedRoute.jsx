@@ -6,7 +6,6 @@ import { InvalidRoute } from "./invalidRoute";
 export const ProtectedRoute = ({ children, role }) => {
     const { user, userRole } = useAuth();
 
-    //if (loading) return <h2>Loading...</h2>;
     if (!user) return <Navigate to="/" />;
     if (role && role !== userRole) return <InvalidRoute />;
     if (role == null && userRole != null) return <InvalidRoute />; // if the user have role but attempts to go back to role page, restrict

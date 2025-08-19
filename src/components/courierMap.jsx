@@ -13,7 +13,6 @@ const CourierMap = ({ courierId }) => {
   const [animatedPos, setAnimatedPos] = useState(null);
   const prevPos = useRef(null);
 
-  const isLoaded = true;
   // listen to Firestore location updates
   useEffect(() => {
     if (!courierId) return;
@@ -61,7 +60,7 @@ const CourierMap = ({ courierId }) => {
     return () => clearInterval(interval);
   }, [courierPos]);
 
-  if (!isLoaded || !animatedPos) return <p>Loading map...</p>;
+  if (!animatedPos) return <p>Loading map...</p>;
 
   return (
     <GoogleMap

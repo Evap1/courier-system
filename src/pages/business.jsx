@@ -59,7 +59,7 @@ export const Business = () => {
       {/* Side Navbar */}
       <aside
           className="w-64 fixed top-0 left-0 bottom-0 z-30 bg-white border-r flex-shrink-0">
-          <div class="flex flex-col h-full">
+          <div className="flex flex-col h-full">
               <div className='h-20 flex items-center px-8'>
                   <a href='/' className='flex-none'>
                       <img src="/name_logo.png" width={140} className="mx-auto" alt="logo"/>
@@ -102,8 +102,7 @@ export const Business = () => {
           setVisibleDelivery={setVisibleDelivery}
           />}
         {tab === "profile" && <ProfileTab
-          businessData={businessData}
-          userRole={"business"}
+          profile={businessData}
         />}
         {tab === "overview" && <OverViewTab
           deliveries={deliveries}

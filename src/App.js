@@ -9,8 +9,8 @@ import { Business } from "./pages/business";
 import { useAuth } from "./context/AuthContext"; // for global user / userRole
 import './theme.css'; 
 function App() {
-  const { loading } = useAuth();
-  if (loading) {
+  const { loading , userRole, user } = useAuth();
+  if (loading || (user && userRole === null)) {
     return (
       <div className="h-screen flex items-center justify-center">
         <span className="text-lg font-semibold text-gray-600">Loading...</span>

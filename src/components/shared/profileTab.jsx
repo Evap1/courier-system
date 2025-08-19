@@ -1,26 +1,14 @@
 import { useEffect, useState } from "react";
 import { getWithAuth } from "../../api/api";
 
-export const ProfileTab = () => {
-    const [profile, setProfile] = useState(null);
+export const ProfileTab = ({profile = {}}) => {
+    // const [profile, setProfile] = useState(null);
     const [error, setError] = useState("");
-  
-    useEffect(() => {
-      async function fetchProfile() {
-        try {
-          const data = await getWithAuth("http://localhost:8080/me");
-          setProfile(data);
-        } catch (err) {
-          setError("Failed to load profile data.");
-        }
-      }
-      fetchProfile();
-    }, []);
-  
+
     if (error || !profile) {
       return (
         <div className="flex justify-center items-center h-64">
-          <span className="text-red-500 text-lg">{error || "No profile found."}</span>
+          <span className="text-red-500 text-lg">{"No profile found."}</span>
         </div>
       );
     }
