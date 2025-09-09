@@ -79,7 +79,7 @@ return (
     {step === 1 ? (
       <div className="max-w-lg w-full text-center bg-white p-8 rounded-2xl shadow-lg space-y-6">
         <h2 className="text-2xl font-bold">Please select your role</h2>
-        <p className="text-gray-500 text-sm">Choose how you want to use Velora</p>
+        <p className="text-gray-500 text-sm">Choose how you want to use Invio</p>
 
         <div className="flex justify-center gap-4">
           {roles.map((role) => (
