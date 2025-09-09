@@ -5,8 +5,67 @@
  * bound to the selected delivery; otherwise a short status message is shown.
  */
 
-import { useState } from "react";
+import {  useEffect, useMemo, useState } from "react";
 import CourierMap from "../courierMap";
+
+const PAGE_SIZE = 13;
+const LAST_N_DAYS = 30; // change to 31 or use "1 month" logic if you prefer
+
+// try to read a timestamp from a delivery
+function getTimeMs(d) {
+  const raw =
+    d?.updatedAt ??
+    d?.createdAt ??
+    d?.time ??
+    d?.date ??
+    null;
+
+  if (!raw) return 0;
+
+  // number of ms already
+  if (typeof raw === "number") return raw;
+
+  // plain Date
+  if (raw instanceof Date) return raw.getTime();
+
+  // Firestore Timestamp (.toDate exists)
+  if (typeof raw.toDate === "function") return raw.toDate().getTime();
+
+  // Firestore-like { seconds, nanoseconds }
+  if (typeof raw.seconds === "number") {
+    return raw.seconds * 1000 + Math.floor((raw.nanoseconds || 0) / 1e6);
+  }
+
+  // ISO string or anything Date.parse can handle
+  const t = Date.parse(raw);
+  return Number.isFinite(t) ? t : 0;
+}
+
+
+// build a compact page list with ellipses like Float UI examples
+function buildPages(current, total) {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => String(i + 1));
+  }
+
+  const pages = [];
+  const push = (v) => pages.push(String(v));
+  const DOTS = "...";
+
+  const left = Math.max(2, current - 1);
+  const right = Math.min(total - 1, current + 1);
+
+  push(1);
+
+  if (left > 2) pages.push(DOTS);
+  for (let p = left; p <= right; p++) push(p);
+  if (right < total - 1) pages.push(DOTS);
+
+  push(total);
+
+  return pages;
+}
+
 
 export const DeliveriesTab = ({ deliveries = [], isAdmin, visibleDelivery, setVisibleDelivery = () => {} }) => {
   const [filterItem, setFilterItem] = useState("");
@@ -21,6 +80,80 @@ export const DeliveriesTab = ({ deliveries = [], isAdmin, visibleDelivery, setVi
       : true;
     return matchItem && matchStatus && matchBusiness;
   });
+
+  // filter to last month
+  const cutoff = useMemo(
+    () => Date.now() - LAST_N_DAYS * 24 * 60 * 60 * 1000,
+    []
+  );
+
+  const lastMonthDeliveries = useMemo(() => {
+    return (filteredDeliveries ?? []).filter((d) => getTimeMs(d) >= cutoff);
+  }, [filteredDeliveries, cutoff]);
+
+  // 2) Sort descending (newest first)
+  const sorted = useMemo(() => {
+    return [...lastMonthDeliveries].sort((a, b) => getTimeMs(b) - getTimeMs(a));
+  }, [lastMonthDeliveries]);
+
+  // 3) Pagination
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  
+
+  useEffect(() => {
+    // if the data size changes, keep page in range
+    setPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [sorted.length, totalPages]);
+
+  const pageStart = (page - 1) * PAGE_SIZE;
+  const pageData = useMemo(
+    () => sorted.slice(pageStart, pageStart + PAGE_SIZE),
+    [sorted, pageStart]
+  );
+
+  const pages = useMemo(() => buildPages(page, totalPages), [page, totalPages]);
+
+  const goTo = (p) => {
+    if (typeof p !== "number") return;
+    if (p < 1 || p > totalPages) return;
+    setPage(p);
+  };
+
+  const PrevBtn = (
+    <button
+      type="button"
+      onClick={() => goTo(page - 1)}
+      disabled={page <= 1}
+      className="hover:text-indigo-600 flex items-center gap-x-2 disabled:opacity-40"
+      aria-label="Previous page"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+           fill="currentColor" className="w-5 h-5">
+        <path fillRule="evenodd" d="M18 10a.75.75 0 01-.75.75H4.66l2.1 1.95a.75.75 0 11-1.02 1.1l-3.5-3.25a.75.75 0 010-1.1l3.5-3.25a.75.75 0 111.02 1.1l-2.1 1.95h12.59A.75.75 0 0118 10z"
+              clipRule="evenodd" />
+      </svg>
+      Previous
+    </button>
+  );
+
+  const NextBtn = (
+    <button
+      type="button"
+      onClick={() => goTo(page + 1)}
+      disabled={page >= totalPages}
+      className="hover:text-indigo-600 flex items-center gap-x-2 disabled:opacity-40"
+      aria-label="Next page"
+    >
+      Next
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+           fill="currentColor" className="w-5 h-5">
+        <path fillRule="evenodd" d="M2 10a.75.75 0 01.75-.75h12.59l-2.1-1.95a.75.75 0 111.02-1.1l3.5 3.25a.75.75 0 010 1.1l-3.5 3.25a.75.75 0 11-1.02-1.1l2.1-1.95H2.75A.75.75 0 012 10z"
+              clipRule="evenodd" />
+      </svg>
+    </button>
+  );
+
 
   // for different color badges
   function getStatusClasses(status) {
@@ -94,7 +227,7 @@ export const DeliveriesTab = ({ deliveries = [], isAdmin, visibleDelivery, setVi
                 </thead>
                 <tbody className="text-gray-600 divide-y">
                     {
-                        filteredDeliveries.map((delivery, idx) => (
+                        pageData.map((delivery, idx) => (
                             <tr key={idx}>
                                 {isAdmin && <td className="pr-6 py-4 whitespace-nowrap">{delivery.businessName}</td>}
                                 <td className="pr-6 py-4 whitespace-nowrap">{delivery.item}</td>
@@ -134,6 +267,35 @@ export const DeliveriesTab = ({ deliveries = [], isAdmin, visibleDelivery, setVi
                 </tbody>
             </table>
         </div>
+      {/* Pagination */}
+      <br></br>
+      <div className="hidden sm:flex items-center justify-between" aria-label="Pagination">
+        {PrevBtn}
+
+        <ul className="flex items-center gap-1">
+          {pages.map((item) => (
+            <li key={item} className="text-sm">
+              {item === "..." ? (
+                <div className="px-3 py-2 select-none">…</div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => goTo(Number(item))}
+                  aria-current={Number(item) === page ? "page" : undefined}
+                  className={[
+                    "px-3 py-2 rounded-lg duration-150 hover:text-indigo-600 hover:bg-indigo-50",
+                    Number(item) === page ? "bg-indigo-50 text-indigo-600 font-medium" : ""
+                  ].join(" ")}
+                >
+                  {item}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {NextBtn}
+      </div>
     </section>
 
     {visibleDelivery && (
