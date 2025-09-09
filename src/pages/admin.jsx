@@ -9,7 +9,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { doc, collection, onSnapshot } from "firebase/firestore";
+import { doc, collection, onSnapshot , getDoc} from "firebase/firestore";
 import { db } from "../firebase";
 import { getWithAuth } from "../api/api";
 
@@ -32,12 +32,25 @@ export const Admin = () => {
 
   useEffect(() => {
     if (!user) return;
+    // console.log(user);
+
+    // const getMyProfile = async () => {
+    //   try{
+    //     const snap = await getDoc(doc(db, "users", user.uid));
+    //     setAdminData( { id: snap.id, ...snap.data() });
+    //     console.log(adminData);
+    //   } catch (err) {
+    //     console.error("Failed to fetch admin info", err);
+    //   }
+    // };
+    // getMyProfile();
 
     // get admin info
     const fetchAdmin = async () => {
         try {
           const data = await getWithAuth("http://localhost:8080/me");
           setAdminData(data);
+          console.log(data);
         } catch (err) {
           console.error("Failed to fetch admin info", err);
         }
@@ -119,7 +132,7 @@ export const Admin = () => {
                           <div className="flex items-center gap-x-4">
                               <img src="https://randomuser.me/api/portraits/women/79.jpg" className="w-12 h-12 rounded-full" alt="user"/>
                               <div>
-                                  <span className="block text-gray-700 text-sm font-semibold">{adminData.AdminName}</span>
+                                  <span className="block text-gray-700 text-sm font-semibold">{user.displayName || adminData.AdminName}</span>
                               </div>
                           </div>
                       </div>
@@ -133,7 +146,8 @@ export const Admin = () => {
         {tab === "overview" && <OverViewTab  deliveries={deliveries} couriers={couriers} /> }
         {tab === "deliveries" && ( <DeliveriesTab deliveries={deliveries} isAdmin={true} visibleDelivery={visibleDelivery} setVisibleDelivery={setVisibleDelivery} /> )}
         {tab === "couriers" && <CouriersTab deliveries={deliveries} couriers={couriers} locations={locations} />}
-        {tab === "profile" && <ProfileTab profile={adminData} />}
+        {tab === "profile" && <ProfileTab profile={ adminData}
+ />}
       </main>
     </div>
   );

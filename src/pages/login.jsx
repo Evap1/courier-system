@@ -60,10 +60,10 @@ export const Login =  () => {
     const handleGoogleSignIn = async () => {
         try {
             const result = await signInWithPopup(auth, googleProvider);
-
+            console.log("the returned user is: ", result.user )
             // check if the user already has a role
             const role = await checkUserRole(result.user.uid);
-            
+            console.log("Role is: ", role);
             if (role) {
               // existing user - navigate to their role-based dashboard
               navigate(`/${role}`);
@@ -131,13 +131,13 @@ export const Login =  () => {
     
     // to handle signout / signin
     useEffect(() => {
-      if (user && userRole) {
+      if (!loading && userRole) {
         navigate(`/${userRole}`);
       }
-      else if (user) {
-        navigate(`/role`);
-      }
-    }, [user, userRole, navigate, loading]);
+      // else if (user) {
+      //   navigate(`/role`);
+      // }
+    }, [userRole, navigate, loading]);
     
     // display errors more readable to the user.
     const mapFirebaseError = (code) => {

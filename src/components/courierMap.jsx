@@ -8,8 +8,14 @@ import { GoogleMap, Marker} from "@react-google-maps/api";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { Loader } from "./loader";
+import mapStyle from "../components/mapStyle.json"; 
 
 const containerStyle = {width: "100%" , height:"100%"}; // can adjust height
+
+const mapOptions = {
+  styles: mapStyle,
+};
+
 
 const CourierMap = ({ courierId }) => {
   const [courierPos, setCourierPos] = useState(null);
@@ -73,6 +79,7 @@ const CourierMap = ({ courierId }) => {
       mapContainerStyle={containerStyle}
       center={animatedPos}
       zoom={15}
+      options={mapOptions}
     >
       <Marker position={animatedPos} />
     </GoogleMap>

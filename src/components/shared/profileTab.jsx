@@ -19,7 +19,6 @@ export const ProfileTab = ({profile = {}}) => {
     const email = profile.Email;
     const role =  profile.Role;
     const avatarUrl = profile.profilePicture || "https://randomuser.me/api/portraits/women/79.jpg";
-  
     return (
       <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-md p-8 flex flex-col items-center mt-12">
         <img

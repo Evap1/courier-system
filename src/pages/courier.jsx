@@ -113,7 +113,6 @@ function getIconForStatus(status) {
 
 export const Courier = () => {
   const { user } = useAuth();  
-  console.log(user.uid);
   // to know the prev state even if re-rendering
   // avoiding rerendering if not needed. 
   const mapRef = useRef(null);
@@ -140,10 +139,10 @@ export const Courier = () => {
   const [name, setName] = useState("");
 
 
-  const couriersMap = {"Xs2He5J4fNfGAWTBGZ8ZXNN2U952" : "courier_1",
-                       "iEBhmFIL5dPfNfMXCDdfoIuTzkw2" : "courier_2",
-                       "xsmlr7lnvJerCcXSOxWya9Mn4kH2" : "courier_3",
-                       "YbeQKvpSpTcchMvxwb0QISq1dZA2" : "courier_4",
+  const couriersMap = {"ClpxDhigAhh9qw2fwbXX2yFGD233" : "courier_1",
+                       "1IYf7hHXqOe9bWLPjrzXSTyyik62" : "courier_2",
+                       "tVZ0E1EDTqSzmH1IOfllNHTc8Qv1" : "courier_3",
+                       "5Wd8TPEiNhWspsxiYwcSFDi64jH2" : "courier_4",
                        "0vnSIMXRnFRZvuy1u76ResHtk1M2" : "courier_5"
   };
   // for testing
@@ -236,7 +235,6 @@ export const Courier = () => {
         const url = `http://localhost:8080/deliveries?lat=${pos.lat}&lng=${pos.lng}&r=${radiusKm}`;
         try {
           const data = await getWithAuth(url);
-          console.log(data);
           const fixed = data.map(d => ({
             ...d,
             BusinessLocation: {
@@ -250,8 +248,6 @@ export const Courier = () => {
           }));
           //console.log("IDs:", data.map(d => d.Id));
           setPosted(fixed);
-
-          console.log("Fetched deliveries:", fixed);
         } catch (err) {
           console.error("Failed to fetch deliveries", err);
         }

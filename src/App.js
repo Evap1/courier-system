@@ -23,12 +23,10 @@ function App() {
 
   return (
     <BrowserRouter>
-          {(loading || (user && userRole === null)) ? (
+          {(loading ) ? ( // try to do it || && (user && userRole === null)
         <Loader />
       ) : (
-        <>
-      { /* Global Sign Out button */}
-      
+        <>      
       <Routes>
         <Route index path="/" element={<Login />}></Route>
         <Route

@@ -106,7 +106,7 @@ export const DeliveriesTab = ({ deliveries = [], isAdmin, visibleDelivery, setVi
                                 <td className="pr-6 py-4 whitespace-nowrap">{delivery.destinationAddress}</td>
                                 <td className="pr-6 py-4 whitespace-nowrap">{delivery.createdAt?.toDate().toLocaleString()}</td>
                                 <td className="text-right whitespace-nowrap">
-                                {delivery.assignedTo && delivery.status !== "accepted" ? (
+                                {delivery.assignedTo && delivery.status === "picked_up" ? (
                                 <div className="text-left whitespace-nowrap">
                                     <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                                     onClick={() => {

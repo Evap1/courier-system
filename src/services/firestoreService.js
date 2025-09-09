@@ -8,7 +8,7 @@ import { doc, collection, Timestamp, setDoc, addDoc } from "firebase/firestore";
  * @param {string} email - User email address.
  * @param {string} role - User role (courier, business, admin).
  */ 
-export const createUserDocument = async (uid, email, role = null, name,  extraFields = {}) => {
+export const createUserDocument = async (uid, email, role = null, name ="",  extraFields = {}) => {
 
   try {
     await setDoc(doc(db, "users", uid), {

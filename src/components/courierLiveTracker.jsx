@@ -10,8 +10,16 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { Loader } from "./loader";
+import mapStyle from "../components/mapStyle.json"; 
 
 const containerStyle = { width: "100%", height: "100vh" };
+
+
+const mapOptions = {
+  styles: mapStyle,
+};
+
+
 
 const CourierLiveTracker = ({ destination }) => {
   const { user } = useAuth();
@@ -82,6 +90,7 @@ const CourierLiveTracker = ({ destination }) => {
             center={pos}
             zoom={15}
             onLoad={(map) => (mapRef.current = map)}
+            options={mapOptions}
           >
             <Marker position={pos} />
             {directions && <DirectionsRenderer directions={directions} />}

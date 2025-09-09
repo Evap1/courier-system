@@ -23,21 +23,22 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-
+      setLoading(true); 
       if (firebaseUser) {
         setUser(firebaseUser);
-        console.log(user);
+        //console.log(user);
         const docRef = doc(db, "users", firebaseUser.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setUserRole(docSnap.data().role);
+        } else {
+          setUserRole(null);
         }
       } else {
         setUser(null);
         setUserRole(null);
       }
       setLoading(false);  // <-- this is when loading ends
-
     });
     return () => unsubscribe();
   }, []);

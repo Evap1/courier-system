@@ -12,7 +12,8 @@ import { InvalidRoute } from "./invalidRoute";
 
 export const ProtectedRoute = ({ children, role }) => {
     const { user, userRole } = useAuth();
-
+// add loading check here and only then redirect
+// maybe add if (!UserRole) then loader too, check where its updated and what is the flow. and maybe add to state to reload 
     if (!user) return <Navigate to="/" />;
     if (role && role !== userRole) return <InvalidRoute />;
     if (role == null && userRole != null) return <InvalidRoute />; // if the user have role but attempts to go back to role page, restrict

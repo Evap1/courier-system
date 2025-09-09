@@ -7,11 +7,16 @@
 
 import { useState } from "react";
 import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
+import mapStyle from "../mapStyle.json"; 
 
 import CourierActivityChart from "./courierChart";
 
-const mapStyle = { width: "100%", height: "500px" };
+const containerStyle = { width: "100%", height: "500px" };
 const mapCenter = { lat: 32.09, lng: 34.85 };
+
+const mapOptions = {
+  styles: mapStyle,
+};
 
 export const CouriersTab = ({deliveries, couriers,locations}) => {
   const [activeMarker, setActiveMarker] = useState(null);
@@ -40,10 +45,11 @@ export const CouriersTab = ({deliveries, couriers,locations}) => {
           Active Couriers on Live Map
         </h3>
           <GoogleMap
-            mapContainerStyle={mapStyle}
+            mapContainerStyle={containerStyle}
             center={mapCenter}
             zoom={10}
             onClick={() => setActiveMarker(null)}
+            options={mapOptions}
           >
             {Object.entries(locations).map(([cid, loc]) => (
               <Marker

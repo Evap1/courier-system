@@ -58,7 +58,7 @@ export const Role = () => {
             }, { merge: true });
 
 
-            await refreshUserRole(); // Refetch from Firestore
+            await refreshUserRole(); // refetch from Firestore
             
             // navigate to the relevant dashboard
             navigate(`/${selectedRole}`);
