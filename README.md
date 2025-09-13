@@ -9,18 +9,17 @@ Node.js and npm installed.
 
 **Firebase**:
 
--   You will need a <u>Firebase project with Authentication</u>
-    (Email/Password and Google sign []{dir="rtl"}in enabled) and
-    Firestore database. []{dir="rtl"}You can create one on
-    <https://console.firebase.google.com/>. This project's Firebase
-    config keys will be used in []{dir="rtl"}the frontend (see more in
+-   You will need a *Firebase project with Authentication*
+    (Email/Password and Google sign and Firestore database.)\
+    You can create one on <https://console.firebase.google.com/>.
+    This project's Firebase config keys will be used in the frontend (see more in
     step 3).
 
--   You'll also need to generate a [Firebase Service Account
-    JSON]{.underline} file for server []{dir="rtl"}authentication. You
-    can do this by going to:\
+-   You'll also need to generate a *Firebase Service Account
+    JSON* file for server authentication. You
+    can do this by going to:
     Project settings → Service accounts → Select go → Generate new
-    private key []{dir="rtl"}and saving the JSON file.\
+    private key and saving the JSON file.
     Place this JSON file somewhere accessible and secret (but do NOT
     commit it to git). (see more in step 3, used for FIREBASE_SA )
 
@@ -32,12 +31,12 @@ display (see more in step 3).
 
 ### **2. Cloning the Repository**
 
-Begin by cloning the project repository from GitHub:\
+Begin by cloning the project repository from GitHub:
 ```
 git clone https://github.com/Evap1/courier-system.git
 ```
 
-Then, navigate into the project directory:\
+Then, navigate into the project directory:
 ```
 cd courier-system
 ```
@@ -49,7 +48,7 @@ The repository contains both frontend and backend code.
 Before running the app, you need to configure environment variables for
 the frontend and backend:
 
-**Frontend**:\
+**Frontend**:
 In the project root, you can find a file named ".env". This file holds
 the Firebase and Google Maps keys. Open it and ensure it contains the
 following keys (replace the placeholder values with your actual
@@ -72,13 +71,11 @@ REACT_APP_GOOGLE_MAPS_API_KEY=\<Your Google Maps API Key\>
 The Firebase values can be found in your Firebase project settings under
 Project Settings → General → SDK setup and configuration :
 
-![SDK generation](images/SDK.png){width="4.620057961504812in"
-height="1.567318460192476in"}
+![SDK generation](images/SDK.png)
 
 Choose the web and follow the instructions.\
 All of the required fields will be filled out in this screen:\
-![API fields](images/API.png){width="4.311733377077865in"
-height="4.992456255468067in"}
+![API fields](images/API.png)
 
 The Google Maps API key can be found in your Google Cloud account
 settings under: APIs & Services → Credentials → Show key.\
@@ -118,7 +115,7 @@ This will fetch Go dependencies (Gin, Firebase Admin SDK, etc.).
 
 Start the backend API server first, from the project root:
 ```
-Source .env
+source .env
 go run .\backend\cmd\server
 ```
 
@@ -127,8 +124,7 @@ should see a log like "server\
 listening on :8080" in the console. The server will connect to Firestore
 and be ready to accept requests, Leave this running.
 
-![backend](images/backend.png){width="6.268055555555556in"
-height="1.4277777777777778in"}
+![backend](images/backend.png)
 
 ### **6. Running the Frontend App**
 
@@ -141,8 +137,7 @@ npm start
 This will start the app on **http://localhost:3000** (the default server
 address) and usually will open your default browser with that URL.
 
-![frontend](images/frontend.png){width="2.520152012248469in"
-height="1.2501017060367454in"}
+![frontend](images/frontend.png)
 
 ### **7. Using the Application**
 
@@ -153,6 +148,7 @@ page.
 Sign In as a new user and choose your role.
 
 **For Business account:**
+
 create a new account, then on the first screen choose "Business" and
 enter a business name and address. Now you will see the business
 dashboard. Try adding a new delivery, it should appear in your list with
@@ -163,6 +159,7 @@ the courier moving on the map in real time. When delivered, the status
 will be changed to "delivered" .
 
 **For courier account:**
+
 create a new account, then on the first screen choose "Courier" and
 enter a name. Allow location access (in browser prompt) to enable live
 tracking. You should see a map and posted deliveries as markers on it.
@@ -171,6 +168,7 @@ on it again when picked. Then, navigate to the destination and update
 the status to "Delivered" when the drop off was successful.
 
 **For Admin account:**
+
 There's no UI to register as admin.\
 In the root folder, there is a folder called "scripts" and a file called
 initAdmin.js in it.\
@@ -179,44 +177,50 @@ When admin is initialized, you may sign in with email and password and
 with google sign in as well.\
 When data is seeded you may see all dashboards functionality.
 
-[To run initAdmin.js:]{.underline}
+*To run initAdmin.js:*
 
 0\. If it's the first time running the script: run 
 ```
 npm i firebase-admin \@faker-js/faker uuid\
 ```
-1\. make sure you're in the root\
-2. Modify ADMIN_EMAIL and ADMIN_PASSWORD in initAdmin.js as desired.\
-3. Run the following, can be found in env file:
+1\. make sure you're in the root.
+
+2\. Modify ADMIN_EMAIL and ADMIN_PASSWORD in initAdmin.js as desired.
+
+3\. Run the following, can be found in env file:
 ```
 export FIREBASE_SA=\<\>
 export GCP_PROJECT_ID=\<\>
 ```
 4\. Run the file: node /scripts/initAdmin.js
 
-[To fill dummy data:]{.underline}\
-[If you desire to test API:\
-]{.underline}You may manually create deliveries and users using the app
+**To fill dummy data:**
+
+*If you desire to test API:*\
+You may manually create deliveries and users using the app
 or use postman to execute API functions
 
-[If you desire to only fill the data:
-]{.underline}You may manually add users and deliveries in firebase
-console database in the collection created.\
+*If you desire to only fill the data:*\
+You may manually add users and deliveries in firebase
+console database in the collection created.
 or you may **run scripts/seed.js** file that will do the previous,
 automatically.\
-[Important to emphasize]{.underline}, it will create users and
+
+*Important to emphasize*, it will creae users and
 deliveries directly in firebase DB, thus it's not testing the API
 functionality (for delivery creation perhaps).
 
-[To run seed.js:]{.underline}
+*To run seed.js:*
 
 0\. If it's the first time running the script, run 
 ```
 npm i firebase-admin \@faker-js/faker uuid\
 ```
-1\. make sure you're in the root\
-2. Modify SEED_PASSWORD in seed.js as desired.\
-3. Run the following, can be found in env file:
+1\. make sure you're in the root.
+
+2\. Modify SEED_PASSWORD in seed.js as desired.
+
+3\. Run the following, can be found in env file:
 
 ```
 export FIREBASE_SA=\<\>
