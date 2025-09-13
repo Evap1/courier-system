@@ -9,7 +9,7 @@ Node.js and npm installed.
 
 **Firebase**:
 
--   You will need a [Firebase project with Authentication]{.underline}
+-   You will need a <u>Firebase project with Authentication</u>
     (Email/Password and Google sign []{dir="rtl"}in enabled) and
     Firestore database. []{dir="rtl"}You can create one on
     <https://console.firebase.google.com/>. This project's Firebase
