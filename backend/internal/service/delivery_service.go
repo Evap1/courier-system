@@ -9,7 +9,7 @@ import (
 	"github.com/Evap1/courier-system/backend/internal/db"
 	"github.com/Evap1/courier-system/backend/api"
 	"google.golang.org/api/iterator"
-	"fmt"
+	// "fmt"
 )
 
 // api.Delivery defined by the yaml in backend/internal/transport/http/openapi.gen.go
@@ -113,14 +113,14 @@ func (s *DeliveryService) ListDeliveries(ctx context.Context, filter ListFilter)
 		//fmt.Println(" checking delivery:", d.Item)
 		id := doc.Ref.ID
 		d.Id = &id
-		fmt.Println("the id is: ", *d.Id)
+		//fmt.Println("the id is: ", *d.Id)
 		// geo-filter on the app server (firestore can’t do distance natively)
 		if filter.CenterLat != nil && filter.RadiusKm != nil {
 			//fmt.Println("Entered condition for geo-filtering")
 			dist := geoDistanceKm(
 				*filter.CenterLat, *filter.CenterLng,
 				d.BusinessLocation.Lat, d.BusinessLocation.Lng)
-			fmt.Println(dist)
+			//fmt.Println(dist)
 
 			// courier - see posted or its own active/picked_up/delivered deliveries
 			// by T/F table, choosing the rows with false assigment

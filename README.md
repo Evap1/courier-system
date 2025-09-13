@@ -1,70 +1,226 @@
-# Getting Started with Create React App
+## **Courier Management User Guide**
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### **1. Prerequisites**
 
-## Available Scripts
+**Node.js and npm**: To run the React frontend, make sure you have
+Node.js and npm installed.
 
-In the project directory, you can run:
+**Go**: To run the backend server, make sure you have Go installed.
 
-### `npm start`
+**Firebase**:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+-   You will need a [Firebase project with Authentication]{.underline}
+    (Email/Password and Google sign []{dir="rtl"}in enabled) and
+    Firestore database. []{dir="rtl"}You can create one on
+    <https://console.firebase.google.com/>. This project's Firebase
+    config keys will be used in []{dir="rtl"}the frontend (see more in
+    step 3).
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+-   You'll also need to generate a [Firebase Service Account
+    JSON]{.underline} file for server []{dir="rtl"}authentication. You
+    can do this by going to:\
+    Project settings → Service accounts → Select go → Generate new
+    private key []{dir="rtl"}and saving the JSON file.\
+    Place this JSON file somewhere accessible and secret (but do NOT
+    commit it to git). (see more in step 3, used for FIREBASE_SA )
 
-### `npm test`
+**Google Maps API Key**: Enable "Maps JavaScript API" and "Places API"
+in Google Cloud (<https://console.cloud.google.com/>) and obtain an API
+key. You can do this by going to: APIs & Services → Credentials → Create
+credentials → API key. This is required for address autocomplete and map
+display (see more in step 3).
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### **2. Cloning the Repository**
 
-### `npm run build`
+Begin by cloning the project repository from GitHub:\
+```
+git clone https://github.com/Evap1/courier-system.git
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Then, navigate into the project directory:\
+```
+cd courier-system
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+The repository contains both frontend and backend code.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### **3. Configuration**
 
-### `npm run eject`
+Before running the app, you need to configure environment variables for
+the frontend and backend:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+**Frontend**:\
+In the project root, you can find a file named ".env". This file holds
+the Firebase and Google Maps keys. Open it and ensure it contains the
+following keys (replace the placeholder values with your actual
+credentials):
+```
+REACT_APP_FIREBASE_API_KEY=\<Your Firebase Web API Key\>
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+REACT_APP_FIREBASE_AUTH_DOMAIN=\<your-project-id\>.firebaseapp.com
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+REACT_APP_FIREBASE_PROJECT_ID=\<your-project-id\>
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+REACT_APP_FIREBASE_STORAGE_BUCKET=\<your-project-id\>.appspot.com
 
-## Learn More
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=\<Firebase Sender ID\>
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+REACT_APP_FIREBASE_APP_ID=\<Firebase App ID\>
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+REACT_APP_GOOGLE_MAPS_API_KEY=\<Your Google Maps API Key\>
+```
+The Firebase values can be found in your Firebase project settings under
+Project Settings → General → SDK setup and configuration :
 
-### Code Splitting
+![SDK generation](images/SDK.png){width="4.620057961504812in"
+height="1.567318460192476in"}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Choose the web and follow the instructions.\
+All of the required fields will be filled out in this screen:\
+![API fields](images/API.png){width="4.311733377077865in"
+height="4.992456255468067in"}
 
-### Analyzing the Bundle Size
+The Google Maps API key can be found in your Google Cloud account
+settings under: APIs & Services → Credentials → Show key.\
+\
+**Backend**:\
+The backend expects two environment variables at runtime:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+-   GCP_PROJECT_ID - Your Google Cloud project ID (the same as Firebase
+    project ID).
 
-### Making a Progressive Web App
+-   FIREBASE_SA - The file path to your Firebase Service Account JSON
+    credentials, that is kept in a secret and a local location
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+You can create a backend specific .env file or include it in the same
+root .env file. Alternatively, you can export these variables in your
+shell before running the server.
 
-### Advanced Configuration
+**IMPORTANT:** Never expose your service account JSON or API keys in a
+public repo. Keep the .env out of version control.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### **4. Installation**
 
-### Deployment
+Install dependencies for the **frontend**:\
+```
+npm install
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+This will download all required packages listed in package.json.
 
-### `npm run build` fails to minify
+For the **backend**:
+```
+go mod download
+```
+This will fetch Go dependencies (Gin, Firebase Admin SDK, etc.).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### **5. Running the Backend Server**
+
+Start the backend API server first, from the project root:
+```
+Source .env
+go run .\backend\cmd\server
+```
+
+This will compile and run the Go server. If your env vars are set, you
+should see a log like "server\
+listening on :8080" in the console. The server will connect to Firestore
+and be ready to accept requests, Leave this running.
+
+![backend](images/backend.png){width="6.268055555555556in"
+height="1.4277777777777778in"}
+
+### **6. Running the Frontend App**
+
+In another terminal, from the project root, start the React development
+server:
+```
+npm start
+```
+
+This will start the app on **http://localhost:3000** (the default server
+address) and usually will open your default browser with that URL.
+
+![frontend](images/frontend.png){width="2.520152012248469in"
+height="1.2501017060367454in"}
+
+### **7. Using the Application**
+
+With both servers running, you can now use the app:
+Open http://localhost:3000 in your browser, you should see the Login
+page.
+
+Sign In as a new user and choose your role.
+
+**For Business account:**
+create a new account, then on the first screen choose "Business" and
+enter a business name and address. Now you will see the business
+dashboard. Try adding a new delivery, it should appear in your list with
+status "posted" and "Unassigned". When the courier picks it up, the
+status will be changed to "picked_up". At that point, an "Open Map"
+button should appear in the Courier Info column. Click on it to watch
+the courier moving on the map in real time. When delivered, the status
+will be changed to "delivered" .
+
+**For courier account:**
+create a new account, then on the first screen choose "Courier" and
+enter a name. Allow location access (in browser prompt) to enable live
+tracking. You should see a map and posted deliveries as markers on it.
+Click on one to accept it, update the status to "Picked Up" by clicking
+on it again when picked. Then, navigate to the destination and update
+the status to "Delivered" when the drop off was successful.
+
+**For Admin account:**
+There's no UI to register as admin.\
+In the root folder, there is a folder called "scripts" and a file called
+initAdmin.js in it.\
+This file initializes an admin user or updates an existing one.\
+When admin is initialized, you may sign in with email and password and
+with google sign in as well.\
+When data is seeded you may see all dashboards functionality.
+
+[To run initAdmin.js:]{.underline}
+
+0\. If it's the first time running the script: run 
+```
+npm i firebase-admin \@faker-js/faker uuid\
+```
+1\. make sure you're in the root\
+2. Modify ADMIN_EMAIL and ADMIN_PASSWORD in initAdmin.js as desired.\
+3. Run the following, can be found in env file:
+```
+export FIREBASE_SA=\<\>
+export GCP_PROJECT_ID=\<\>
+```
+4\. Run the file: node /scripts/initAdmin.js
+
+[To fill dummy data:]{.underline}\
+[If you desire to test API:\
+]{.underline}You may manually create deliveries and users using the app
+or use postman to execute API functions
+
+[If you desire to only fill the data:
+]{.underline}You may manually add users and deliveries in firebase
+console database in the collection created.\
+or you may **run scripts/seed.js** file that will do the previous,
+automatically.\
+[Important to emphasize]{.underline}, it will create users and
+deliveries directly in firebase DB, thus it's not testing the API
+functionality (for delivery creation perhaps).
+
+[To run seed.js:]{.underline}
+
+0\. If it's the first time running the script, run 
+```
+npm i firebase-admin \@faker-js/faker uuid\
+```
+1\. make sure you're in the root\
+2. Modify SEED_PASSWORD in seed.js as desired.\
+3. Run the following, can be found in env file:
+
+```
+export FIREBASE_SA=\<\>
+export GCP_PROJECT_ID=\<\>
+```
+
+4\. Run the file: node /scripts/seed.js

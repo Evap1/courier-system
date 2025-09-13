@@ -1,22 +1,16 @@
 /**
- * Full demo seeder for your schema:
- *  - Firebase Auth: 1 admin (email from ADMIN_EMAIL), 12 businesses, 20 couriers (default password SEED_PASSWORD)
- *  - Firestore:
- *      users/{uid}               (role=admin|business|courier, fields per role)
- *      deliveries/{id}           (business*, destination*, status, assignedTo?, deliveredBy?, createdAt)
- *      couriers/{courierUid}/location/current   { lat, lng, updatedAt }   <-- your structure
- *      couriers/{courierUid}/location/history/* (optional pings)
+ * Demo seeder:
+ *  - WILL NOT DELETE or EDIT existing data; it only inserts if missing.
+ *  - It does NOT create/update the admin. All admin changes live in initAdmin.js.
  *
  * ENV (required):
  *   FIREBASE_SA=/abs/path/serviceAccount.json
  *   GCP_PROJECT_ID=<firebase project id>
  *
  * ENV (optional):
- *   ADMIN_EMAIL="eva.poluliakhov@gmail.com"
- *   SEED_PASSWORD="Demo123!"
- *   WIPE="true"                       # delete seeded data & non-admin auth users first
- *   COURIER_LOC_HISTORY_PINGS="24"    # create history pings; 0 disables (default 0)
- *   COURIER_LOC_STEP_MIN="5"          # minutes between history pings
+ *   SEED_PASSWORD="Demo123!"                 // used only for NEWLY-created demo users
+ *   COURIER_LOC_HISTORY_PINGS="24"           // optional location history
+ *   COURIER_LOC_STEP_MIN="5"
  */
 
 const admin = require('firebase-admin');
@@ -27,19 +21,14 @@ process.on('unhandledRejection', (err) => { console.error('[seed] UNHANDLED REJE
 process.on('uncaughtException', (err) => { console.error('[seed] UNCAUGHT EXCEPTION:', err); process.exit(1); });
 
 console.log('[seed] starting at', new Date().toISOString());
-console.log('[seed] env:',
-  { FIREBASE_SA: !!process.env.FIREBASE_SA, GCP_PROJECT_ID: process.env.GCP_PROJECT_ID }
-);
 
-
-// ---------------- Config ----------------
 if (!process.env.FIREBASE_SA || !process.env.GCP_PROJECT_ID) {
   console.error("FIREBASE_SA and GCP_PROJECT_ID are required env vars.");
   process.exit(1);
 }
+
 const DEFAULT_PASSWORD = process.env.SEED_PASSWORD || "Demo123!";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "eva.poluliakhov@gmail.com";
-const HISTORY_PINGS = Math.max(0, parseInt(process.env.COURIER_LOC_HISTORY_PINGS || "0", 10)); // 0 = disabled
+const HISTORY_PINGS = Math.max(0, parseInt(process.env.COURIER_LOC_HISTORY_PINGS || "0", 10));
 const HISTORY_STEP_MIN = Math.max(1, parseInt(process.env.COURIER_LOC_STEP_MIN || "5", 10));
 
 const serviceAccount = require(process.env.FIREBASE_SA);
@@ -100,79 +89,73 @@ function randomDateLast3Months() {
   const t = start.getTime() + Math.random() ** 1.2 * (now.getTime() - start.getTime());
   return new Date(t);
 }
-async function createOrGetAuthUser({ email, password, displayName }) {
-    try {
-      const user = await admin.auth().createUser({ email, password, displayName });
-      return user.uid;
-    } catch (e) {
-      if (e.code === 'auth/email-already-exists') {
-        const user = await admin.auth().getUserByEmail(email);
-        // Always reset password & display name so the demo creds are deterministic
-        await admin.auth().updateUser(user.uid, { password, displayName });
-        return user.uid;
-      }
-      throw e;
+
+// ------------ Auth/Firestore helpers ------------
+
+async function createAuthUserIfAbsent({ email, password, displayName }) {
+  try {
+    const u = await admin.auth().getUserByEmail(email);
+    // Do NOT edit existing users (insert-only policy)
+    return u.uid;
+  } catch (e) {
+    if (e.code === 'auth/user-not-found') {
+      const created = await admin.auth().createUser({ email, password, displayName });
+      return created.uid;
     }
-}
-async function upsertDoc(ref, data) { await ref.set(data, { merge: true }); }
-
-// ---------------- WIPE (optional) ----------------
-async function wipeIfRequested() {
-  if (process.env.WIPE !== 'true') return;
-
-  console.log("WIPE=true → deleting deliveries, couriers/*/location, user docs (except admin), and non-admin Auth users...");
-
-  // Delete deliveries
-  await deleteCollectionBatch('deliveries');
-
-  // Delete couriers/*/location/*
-  const couriersColl = db.collection('couriers');
-  const courierDocs = await couriersColl.listDocuments();
-  for (const cRef of courierDocs) {
-    const locCol = cRef.collection('location');
-    const locDocs = await locCol.listDocuments();
-    for (const lRef of locDocs) {
-      // delete history subcollection if exists
-      const hist = lRef.collection('history');
-      const histDocs = await hist.listDocuments();
-      for (const h of histDocs) await h.delete();
-      await lRef.delete(); // delete "current" (or any other doc under location)
-    }
-    // you can delete the parent doc too; it may be "nonexistent", delete is harmless
-    await cRef.delete().catch(()=>{});
+    throw e;
   }
-
-  // Delete Firestore user docs (except admin)
-  const adminEmailLc = ADMIN_EMAIL.toLowerCase();
-  const userDocs = await db.collection('users').get();
-  const batch = db.batch();
-  let count = 0;
-  userDocs.forEach(doc => {
-    const em = (doc.data().email || '').toLowerCase();
-    if (em !== adminEmailLc) { batch.delete(doc.ref); count++; }
-  });
-  if (count) await batch.commit();
-
-  // Delete Auth users (except admin)
-  const allUsers = await admin.auth().listUsers();
-  await Promise.all(
-    allUsers.users.map(u => ((u.email || '').toLowerCase() === adminEmailLc) ? null : admin.auth().deleteUser(u.uid))
-  );
-
-  console.log("WIPE complete.");
 }
-async function deleteCollectionBatch(collName) {
-  const snap = await db.collection(collName).get();
-  const batches = [];
-  let batch = db.batch();
-  let i = 0;
-  snap.forEach(doc => {
-    batch.delete(doc.ref);
-    i++;
-    if (i % 400 === 0) { batches.push(batch.commit()); batch = db.batch(); }
-  });
-  batches.push(batch.commit());
-  await Promise.all(batches);
+async function createDocIfAbsent(ref, data) {
+  const snap = await ref.get();
+  if (!snap.exists) {
+    await ref.create(data); // will throw if already exists; that’s ok because we checked
+    return true;
+  }
+  return false;
+}
+
+// ---------------- Location helpers ----------------
+function jitter(n=0.001) { return (Math.random()-0.5)*2*n; }
+function near(loc) { return { lat: loc.lat + jitter(0.005), lng: loc.lng + jitter(0.005) }; }
+
+async function seedCourierLocationDocsInsertOnly(couriers, deliveriesByCourier) {
+  const now = new Date();
+  const msStep = HISTORY_STEP_MIN * 60 * 1000;
+
+  for (const { uid } of couriers) {
+    const assigned = deliveriesByCourier.get(uid) || [];
+    let point;
+    if (assigned.length) {
+      const d = pick(assigned);
+      point = {
+        lat: d.businessLocation.lat + 0.8 * (d.destinationLocation.lat - d.businessLocation.lat) + jitter(0.003),
+        lng: d.businessLocation.lng + 0.8 * (d.destinationLocation.lng - d.businessLocation.lng) + jitter(0.003),
+      };
+    } else {
+      point = near(pick(CITIES).loc);
+    }
+
+    // couriers/{uid}/location/current — create if absent
+    const currentRef = db.collection('couriers').doc(uid).collection('location').doc('current');
+    const currentSnap = await currentRef.get();
+    if (!currentSnap.exists) {
+      await currentRef.create({ lat: point.lat, lng: point.lng, updatedAt: now });
+    }
+
+    // history pings — create only missing docs
+    if (HISTORY_PINGS > 0) {
+      const historyCol = db.collection('couriers').doc(uid).collection('location').doc('history').collection('pings');
+      for (let i=HISTORY_PINGS-1; i>=0; i--) {
+        const ts = new Date(now.getTime() - i*msStep).toISOString();
+        const pingRef = historyCol.doc(ts);
+        const exists = (await pingRef.get()).exists;
+        if (!exists) {
+          const pt = { lat: point.lat + jitter(0.002), lng: point.lng + jitter(0.002) };
+          await pingRef.create({ lat: pt.lat, lng: pt.lng, ts: new Date(ts) });
+        }
+      }
+    }
+  }
 }
 
 // ---------------- Generators ----------------
@@ -188,7 +171,6 @@ function generateCouriers(n) {
 }
 function generateBusinesses(n) {
   const list = [];
-  // ensure Afula
   list.push({
     cityKey: 'afula',
     businessName: faker.company.name(),
@@ -242,90 +224,45 @@ function generateDeliveriesForBusiness(biz, courierUids) {
   return out;
 }
 
-// ---------------- Courier location (your structure) ----------------
-function jitter(n=0.001) { return (Math.random()-0.5)*2*n; }
-function near(loc) { return { lat: loc.lat + jitter(0.005), lng: loc.lng + jitter(0.005) }; }
-
-async function seedCourierLocationDocs(couriers, deliveriesByCourier) {
-  const now = new Date();
-  const msStep = HISTORY_STEP_MIN * 60 * 1000;
-
-  for (const { uid } of couriers) {
-    // choose an anchor position:
-    // if courier has assigned deliveries, take a point between business & destination; else random city
-    const assigned = deliveriesByCourier.get(uid) || [];
-    let point;
-    if (assigned.length) {
-      const d = pick(assigned);
-      // pick a position ~80% along the path, with small jitter
-      point = {
-        lat: d.businessLocation.lat + 0.8 * (d.destinationLocation.lat - d.businessLocation.lat) + jitter(0.003),
-        lng: d.businessLocation.lng + 0.8 * (d.destinationLocation.lng - d.businessLocation.lng) + jitter(0.003),
-      };
-    } else {
-      point = near(pick(CITIES).loc);
-    }
-
-    // write couriers/{uid}/location/current
-    const currentRef = db.collection('couriers').doc(uid).collection('location').doc('current');
-    await currentRef.set({
-      lat: point.lat,
-      lng: point.lng,
-      updatedAt: now,
-    }, { merge: true });
-
-    //optional history: couriers/{uid}/location/history/{isoTs}
-    if (HISTORY_PINGS > 0) {
-      const historyCol = db.collection('couriers').doc(uid).collection('location').doc('history').collection('pings');
-      // backdate pings so the last “feels” like now
-      for (let i=HISTORY_PINGS-1; i>=0; i--) {
-        const ts = new Date(now.getTime() - i*msStep);
-        const pt = { lat: point.lat + jitter(0.002), lng: point.lng + jitter(0.002) };
-        await historyCol.doc(ts.toISOString()).set({ lat: pt.lat, lng: pt.lng, ts });
-      }
-    }
-  }
-}
-
 // ---------------- Main ----------------
 (async function main() {
-  await wipeIfRequested();
 
-  // Admin
-  const adminUid = await createOrGetAuthUser({
-    email: ADMIN_EMAIL, password: DEFAULT_PASSWORD, displayName: "Demo Admin"
-  });
-  await upsertDoc(db.collection('users').doc(adminUid), {
-    role: "admin", adminName: "Demo Admin", email: ADMIN_EMAIL,
-  });
-  console.log(`Admin ready: ${ADMIN_EMAIL} (password: ${DEFAULT_PASSWORD})`);
-
-  // Couriers
-  console.log(`Creating ${NUM_COURIERS} couriers...`);
+  // Couriers (auth + Firestore) — insert only
+  console.log(`[seed] Ensuring up to ${NUM_COURIERS} couriers exist...`);
   const courierSeeds = generateCouriers(NUM_COURIERS);
   const couriers = [];
   for (const c of courierSeeds) {
-    const uid = await createOrGetAuthUser({ email: c.email, password: DEFAULT_PASSWORD, displayName: c.name });
-    await upsertDoc(db.collection('users').doc(uid), {
-      role: "courier", courierName: c.name, email: c.email, balance: c.balance,
-    });
+    const uid = await createAuthUserIfAbsent({ email: c.email, password: DEFAULT_PASSWORD, displayName: c.name });
+    const userRef = db.collection('users').doc(uid);
+    // create user profile only if absent
+    await createDocIfAbsent(userRef, {
+      role: "courier",
+      courierName: c.name,
+      email: c.email,
+      balance: c.balance,
+    }).catch(()=>{});
     couriers.push({ uid, ...c });
   }
 
-  // Businesses
-  console.log(`Creating ${NUM_BUSINESSES} businesses...`);
+  // Businesses (auth + Firestore) — insert only
+  console.log(`[seed] Ensuring up to ${NUM_BUSINESSES} businesses exist...`);
   const bizSeeds = generateBusinesses(NUM_BUSINESSES);
   const businesses = [];
   for (const b of bizSeeds) {
-    const uid = await createOrGetAuthUser({ email: b.email, password: DEFAULT_PASSWORD, displayName: b.businessName });
-    await upsertDoc(db.collection('users').doc(uid), {
-      role: "business", businessName: b.businessName, businessAddress: b.businessAddress, email: b.email, location: b.location,
-    });
+    const uid = await createAuthUserIfAbsent({ email: b.email, password: DEFAULT_PASSWORD, displayName: b.businessName });
+    const userRef = db.collection('users').doc(uid);
+    await createDocIfAbsent(userRef, {
+      role: "business",
+      businessName: b.businessName,
+      businessAddress: b.businessAddress,
+      email: b.email,
+      location: b.location,
+    }).catch(()=>{});
     businesses.push({ uid, ...b });
   }
 
-  // Deliveries
-  console.log("Creating deliveries...");
+  // Deliveries — always create (UUIDs avoid collisions)
+  console.log("[seed] Creating deliveries (new UUIDs)...");
   const allDeliveries = [];
   for (const biz of businesses) {
     const ds = generateDeliveriesForBusiness(biz, couriers.map(c => c.uid));
@@ -334,11 +271,18 @@ async function seedCourierLocationDocs(couriers, deliveriesByCourier) {
   for (let i=0; i<allDeliveries.length; i+=400) {
     const slice = allDeliveries.slice(i, i+400);
     const batch = db.batch();
-    for (const d of slice) batch.set(db.collection('deliveries').doc(d.id), d);
-    await batch.commit();
+    for (const d of slice) {
+      const ref = db.collection('deliveries').doc(d.id);
+      batch.create(ref, d); // create-only — will fail if somehow exists (UUID makes it practically unique)
+    }
+    try {
+      await batch.commit();
+    } catch (e) {
+      console.warn('[seed] Some deliveries may already exist; continuing.', e.message);
+    }
   }
 
-  // Map deliveries by courier for anchoring positions
+  // Courier locations — create if missing - required for correct map funcionality.
   const deliveriesByCourier = new Map();
   for (const d of allDeliveries) {
     if (!d.assignedTo) continue;
@@ -346,16 +290,13 @@ async function seedCourierLocationDocs(couriers, deliveriesByCourier) {
     arr.push(d);
     deliveriesByCourier.set(d.assignedTo, arr);
   }
+  await seedCourierLocationDocsInsertOnly(couriers, deliveriesByCourier);
 
-  // Courier location seeding to couriers/{uid}/location/current (+ optional history)
-  await seedCourierLocationDocs(couriers, deliveriesByCourier);
-
-  console.log(`Seeding COMPLETE ✅
-  - Admin: ${ADMIN_EMAIL}
-  - Businesses: ${businesses.length}
-  - Couriers: ${couriers.length}
-  - Deliveries: ${allDeliveries.length}
-  - courier locations: couriers/{uid}/location/current ${HISTORY_PINGS>0?`(+ history: ${HISTORY_PINGS} pings)`:''}
-  - Default password: ${DEFAULT_PASSWORD}`);
+  console.log(`[seed] COMPLETE
+  - Businesses (attempted create up to): ${businesses.length}
+  - Couriers (attempted create up to): ${couriers.length}
+  - Deliveries created: ${allDeliveries.length}
+  - Locations: couriers/{uid}/location/current ${HISTORY_PINGS>0?`(+ history: ${HISTORY_PINGS} pings if missing)`:''}
+  - Default password for NEW demo users: ${DEFAULT_PASSWORD}`);
   process.exit(0);
 })().catch(err => { console.error(err); process.exit(1); });
