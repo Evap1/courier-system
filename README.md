@@ -167,6 +167,13 @@ Click on one to accept it, update the status to "Picked Up" by clicking
 on it again when picked. Then, navigate to the destination and update
 the status to "Delivered" when the drop off was successful.
 
+**IMPORTANT:** 
+TEST_OVERRIDE is a variable used for testing. 
+If it’s true, the location service is override by fixed coordinates, set in courier_routes.json. 
+If you’d like to override the location, notice to fill the courier document id in courierMap (both variables can be found in courier.jsx). 
+If TEST_OVERRIDE is false, the courier will stream it’s real location.
+
+
 **For Admin account:**
 
 There's no UI to register as admin.\
